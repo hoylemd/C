@@ -1,0 +1,63 @@
+Michael Hoyle
+0553453
+CIS 2750
+Assignment 4 - Database Access
+
+Server running instructions:
+to install enter:
+	$make all
+
+to run enter:
+	$./server
+in one terminal, and 
+	$java SVGui
+in another. it is important that the server be started before the GUI, otherwise the pipes wont work and the GUI will be useless.
+
+db running instructions:
+to install enter:
+	$make all
+note: if you already installed the server, db will be installed as well.
+
+to run, enter ./db followed by any arguments. valid arguments are as follows:
+	clear : remove all records from the database
+	add # filename : adds the contents of the file named filename to the database with a primarykey of #
+	remove # : removes the record qith the primary key #
+
+Algorithms and Logic
+
+The DB tools work as follows:
+	clear	: drops and recreates the table, clearing it of data.
+	add 	: Constructs the SQL query to add a row into the table, using "PLACEHOLDER" as the page content.  it then constructs a longer query to insert the page content into the 			content column. It also formats the string containing the page so that any ' in the page do not delimit the string filed in the query.
+	remove	: Constructs an SQL query to remove a row based on a primary key provided and send it to the database.
+
+The Server reads files from the database as follows:
+	It checks if the path requested begins with "db-". if this is the case, then it diverts to a database querying procedure rather than opening the file from the cache directory. (Note: the direct linking to the files in the cache directory has not been removed.) if the next character in the path is a -, it queries the server for all primary keys stored and generates a page complete with links to all pages stored in the database.  The links on that page resolve to querying the server for pages using the db-# protocol.
+	if the next character is not a -, then it assumes the rest of the path is a primary key to a page. It then queries the database for that page, checks that a page was indeed returned (as the database returns an empty string page if the primary key provided does not correspond to a page), and if a valid page was returned, it continues with that page.
+
+	Page retrieval is handled by a switch that either loads the page from the database or loads the file from disk. after page retrieval, the porogram continues as in past iterations of this application. All other parts should be working as they used to.
+
+I managed to fix the blank line at end of file issue by rewriting my readfile function.
+
+Incomplete Code
+
+The math and server parts of assignment 2 are still not implemented
+
+Limitations
+
+While this application does have limitations, they are few and every effort has been made to minimize them.
+
+Firstly, request packets of greater than 2048 characters are not fully supported, however as long as the request path does not extend past the 2048 character mark, it may still function correctly.  This is not anticipated to cause any problems, as most URLS are not 2048 characters long.  Should this ever become an issue, it will be extremely easy to expand this restriction to any required size.
+
+Secondly, library file names of more than 256 characters cannot be loaded. this is a restriction of the dirent struct, however and is not within the scope of this application to change.
+
+Some of the dynamic libraries also have small memory leaks.  This seemed difficult if not impossible to avoid while still returning the correct replacement strings.
+
+There are also some rather large memory leaks in the program. I was unable to correct them.
+
+Math tags are not implemented.
+
+the <SERVER> tag has also not been implemented.
+
+Improvements
+
+Completion of the incomplete components would be a major improvment. also addressing the memory leaks is high on the list of improvments to make. Perhaps a GUI for the db program as well?

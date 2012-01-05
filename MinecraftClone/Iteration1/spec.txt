@@ -1,0 +1,99 @@
+Assignment 1 - Building a Three Dimensional World
+-------------------------------------------------
+Due. January 28, 2011
+
+There are three parts to this assignment. These are building the world, adding
+a moving light (sun), adding moving clouds, and controlling the timing
+of events.
+
+1. World Building
+-----------------
+Create a three dimensional world from cubes.  Use Perlin noise to
+create an interesting surface for the world.
+
+The lower half of the world should be solid. The upper half of the 
+world should be created using the noise function.
+
+A web site with an explanation of Perlin noise is:
+	http://freespace.virgin.net/hugo.elias/models/m_perlin.htm
+You are not required to use the code from this site.
+
+Due to the low resolution of the world, it is probably not necessary to
+use a large number of octaves in the calculation.
+
+
+2. Day-Night Cycle (light animation)
+------------------------------------
+Move the light source in a curve through the sky in a curve that
+simulates the sun and moon.  The light should start at one horizon and
+move to the other.  Once the light has reached the horizon (180 degrees)
+it should jump back to the staring location (0 degrees) and start moving
+again. Draw a white cube to show the location of the sun.
+The sun and the moon will look the same and be the same brightness
+for this assignment.
+
+You need to calculate the curved path for the light, position the light,
+and store a cube to represent its location in the world array.
+
+A complete day and night cycle should be fairly fast so the TA
+can see the light move.
+
+
+3. Clouds (object animation)
+----------------------------
+Clouds will be animated objects which move through the upper part
+of the world space. You will need to keep track of the cloud's locations
+and update the world array as they move. The movement of the clouds
+should be easily visible.  Pick speed and shape for clouds which clearly
+demonstrate the motion. Make clouds larger than one or two cubes in size.
+
+Add the clouds in the world array as white cubes.
+
+Don't allow mountain tops to be destroyed by the clouds. Clouds should
+pass through mountain tops if they collide with them. Alternatively, you
+can just make sure the mountains and clouds never collide.
+ 
+
+4. Timing
+---------
+The update() function will be called by OpenGL. This is used for
+the animations. If the updates to the screen are allowed to run
+freely then the speed of the animation will depend on how often
+the function is called. Faster computers will have faster animations.
+
+To avoid this you need to use real time to schedule updates to the
+animated objects. Use real time to update the animations on a
+fixed time schedule.  You should check the current time with each
+call to update() and only change the animation if enough time has
+passed since the previous change.
+
+
+Coding Practices
+----------------
+Write the code using standard stylistic practices. Use functions, 
+reasonable variable names, and consistent indentation.
+If the code is difficult for the TA to understand then you
+will lose marks.
+
+As usual, keep backups of your work using subversion.
+
+
+Starting Code
+-------------
+The starting code is available on the course moodle site.
+You can untar the file using tar xf filename.
+All of the changes to the code can be made in the
+
+Note that the graphics code may be modified for assignment 2. If you
+make changes to the graphics code (in graphics.c) then you
+may have to recode the changes again in assignment 2.  
+
+Submitting the Assignment
+-------------------------
+Submit the assignment using moodle. Submit only the source code
+and the makefile. Bundle the code in a tar file.
+
+Include the graphics code with your submission. Include a makefile
+that will compile the executable. Name the executable a1.
+ 
+

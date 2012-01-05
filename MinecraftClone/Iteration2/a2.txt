@@ -1,0 +1,111 @@
+
+Add to the code you wrote in assignment 1 to the new versions of a2.c
+and graphics.[ch].  The code should drop into the new a2.c file with
+little to no changes.
+
+There is a readme.txt included with the source code. There is a lot
+of useful information in that file.
+
+The assignment is worth 15 marks in total. Collision detection and gravity
+are worth 5, culling is worth 5, and maze generation is worth 5.
+Note that many of the marks for culling will only be tested if
+collision detection and gravity are implemented.
+
+
+Collision Detection
+-------------------
+Add collision detection so the viewpoint cannot pass into a space
+which is occupied by a cube.
+
+The viewpoint should be able to climb onto cubes which are only
+one unit tall.  If the cube which is collided with does not have
+another cube above it then the viewpoint should move above the cube
+(it should step up on the single cube).
+
+Gravity
+-------
+Add gravity to the program so the viewpoint descends to the ground.
+The rate of descent should not be too fast (eg. 0.1 per update). 
+Note that because the indices are reversed, gravity is an increase in y.
+
+Gravity operates like a collision with the ground. If gravity would
+push the viewpoint into an occupied cube then it should not be be allowed
+to move the viewpoint.
+
+Cube Culling
+------------
+The idea of cube culling is to determine which cubes are visible for
+each frame and to draw only those cubes. This will allow worlds with more
+cubes to be built and the framerate should stay high enough to
+make the game playable.  
+
+There are two parts to culling cubes. The first is finding the viewing
+frustum and identifying the cubes in that space. The second is developing
+one or more other methods to improve the framerate.
+
+Frustum culling tests all cubes in the world against the viewing
+frustum. If they are inside the frustum then they are visible to the
+player. These cubes should be added to the display list so they will
+be drawn.  You can find an explanation of frustum culling and some
+source code at:
+	http://www.crownandcutlass.com/features/technicaldetails/frustum.html   
+You can use this code in your assignment.
+
+To improve the framerate even more you can add other culling techniques
+to the frustum algorithm. Some of these have been discussed in class.
+
+Code which prints out the frames per second has been added to a2.
+This will be useful to let you know if your culling method has improved
+performance.
+
+Marking for the culling algorithms will be based on implementing
+the frustum culling described above and on the achieved framerate
+for any other techniques. The following tests were run with the large
+sample world built using the -testworld command line flag.
+
+The default code which draws all cubes in the world has a framerate of
+approximately 0.85 frames per second (FPS).
+
+Your implementation of the frustum test code mentioned above should
+achieve at least 5 frames per second. Implementing this will be worth
+one mark on the assignment.
+
+If you can achieve 6 frames a second through implementing an additional
+culling method or by tuning the frustum culling code then that will be
+worth another mark.
+
+If you can achieve 10 or more FPS then that is worth another mark.
+If you can achieve 20 of more FPS that is worth one more marks.
+
+In summary:
+	-implementing frustum culling   1 mark
+	-achieving 5 frames per second  1 mark
+	-achieving 6 frames per second  1 mark
+	-achieving 10 frames per second  1 mark
+	-achieving 20 frames per second  1 mark
+
+All timing measurements will be performed in the basement Mac lab in the
+Reynolds building. Frame rates will be measured by starting the
+program with -testworld flag and waiting for the viewpoint
+to settle on the ground. Once the viewpoint reaches the ground the
+frame rate will be read. This means that gravity and collision detection
+must be implemented before culling can be measured. If they are not
+implemented than no timing tests will be run during marking. 
+
+
+Procedural Mazes Generation
+---------------------------
+Build an underground maze which is accessible from the surface.
+There are many maze generating algorithms available on the internet.
+Pick one and build a maze in the world array. Make sure there is
+a way to reach the entrance to the maze. Place the entrance of the
+maze near the starting location of the viewpoint so the TA does
+not have to search for it.  Place some different coloured blocks
+near the entrance so it is easy to see.  It doesn't matter if the
+player falls into a hole to reach the maze and they cannot get out.
+
+The maze must be procedurally generated. It is not sufficient to
+draw a precalculated maze. The maze should be randomized and be
+different each time the program is started.
+
+

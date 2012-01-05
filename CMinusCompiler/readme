@@ -1,0 +1,29 @@
+Readme:
+
+To Compile:
+type:
+	make
+
+To run
+type:
+	./cm <target source file> <output file> [-a|-s]
+	
+	target source file and output file are required. 
+	-a is optional and will cause the abstract syntax tree to be printed to the specified output file. 
+	-s is also optional and will cause the symbol table to be printed whenever context is moved up a level.
+	
+To clean up
+type
+	make clean
+	
+Included example files:
+
+The test files can be found in the cminusCode/ directory. be sure to preface the source file name with the folder name when running.
+
+1.cm:
+compiles cleanly, takes in 3 numbers.  if the last 2 numbers multiplied together they are less than 20, the first will be added to them, and "20" will be printed out.
+the results of those calulations will also be printed out.
+
+2, 4 and 5.cm are just resubmitted from checkpoint 2.
+
+I can bring along more examples of sowkring and not working code at the demo, but i'm already a bit past the deadline, so here's what I got.

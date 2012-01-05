@@ -1,0 +1,39 @@
+Michael Hoyle
+0553453
+CIS 2750
+Assignment 1 - Web Server
+
+Algorithms and Logic
+
+This application will listen at port 8888 for incoming web browser requests.  upon recieving such a request, it will isolate the path to the requested file from the request packet.  It will then replace any custom tags (as detailed by .so files in the /lib directory) with the appropriate replacement string.  It will then send the modified HTML page to the browser for display.
+
+Upon a request for a page that does not exist, the application will send to the browser a hard-coded 404 error page.  This page is hard coded to avoid any issues that may arise with storing it in a file.
+
+Dynamic libraries should consist of a searchString function which returns the string corresponding to a custom tag, and a replaceString function which generates the appropriate text to replace the tag with, and return it.
+
+The application will attempt to load any files in the /lib directory as a shared object file.  It cannot currently distinguish if a file is a valid .so or not. (I plan to fix this given the time to do so)
+
+
+Incomplete Code
+
+I am not aware of any incomplete portions of the assignment.
+
+
+Limitations
+
+While this application does have limitations, they are few and every effort has been made to minimize them.
+
+Firstly, request packets of greater than 2048 characters are not fully supported, however as long as the request path does not extend past the 2048 character mark, it may still function correctly.  This is not anticipated to cause any problems, as most URLS are not 2048 characters long.  Should this ever become an issue, it will be extremely easy to expand this restriction to any required size.
+
+Secondly, library file names of more than 256 characters cannot be loaded. this is a restriction of the dirent struct, however and is not within the scope of this application to change.
+
+Lastly, HTML files must be terminated with a blank line.  For reasons currently unknown, HTML files not terminated with a blank like causes unexplained behavior such as random characters appended to the end of the file and errors upon the second loading of a page.
+
+
+Improvements
+
+If i were to rewrite this program from scratch, I would make an effort to encapsulate the different portions in separate functions.  Most code is in the main function, excluding the server-side includes function.  
+
+I would also include the capeability to distinguish between valid .so library files and non-.so files, and even those not containing the required searchString and replaceString functions.
+
+Any other improvements I anticipate to be within the scope of later assignments.
