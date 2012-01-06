@@ -14,7 +14,7 @@ int increment(int i)
 
 void main(void){
 	int xi;
-	int yi;
+	int yi
 	int zi;
 	
 	inc = input();
@@ -30,7 +30,7 @@ void main(void){
 		output(20);
 	}
 	
-	output(zi);
+	output(zi)
 	
 	return;
 }
