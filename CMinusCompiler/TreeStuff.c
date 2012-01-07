@@ -1,12 +1,19 @@
+/**
+ * Library for Abstract Syntax Trees and Symbol tables
+ */
+
 #include "globals.h"
 
-/* Tree Node Constructor */
-TreeNode * newTreeNode(const char * token,TerminalType tt, Rule r)
+/**
+ * Tree Node Constructor
+ */
+TreeNode * newTreeNode(const char * token, TerminalType tt, Rule r)
 {
+    /* intitialize variables */
     int i = 0;
 	
-	/* allocate */
-    TreeNode * ntn = malloc(sizeof(TreeNode));
+	/* allocate memory */
+    TreeNode * ntn = (TreeNode *) malloc(sizeof(TreeNode));
     
 	/* initialize node pointers */
 	ntn->childCount = 0;
@@ -27,6 +34,8 @@ TreeNode * newTreeNode(const char * token,TerminalType tt, Rule r)
 		/* save the token */
 		strncpy(ntn->tokenValue,token,MAXTOKENLEN);
     }
+
+    /* if no token specified */
     else
     {
 		/* save as a rule type */
@@ -38,26 +47,33 @@ TreeNode * newTreeNode(const char * token,TerminalType tt, Rule r)
     return ntn;
 }
 
-/* Rule node constructor */
+/**
+ * Rule node constructor
+ */
 TreeNode * newRuleNode(Rule r)
 {
 	/* wrap the tree node constructor for a rule */
 	return newTreeNode(NULL,nada,r);
 }
 
-/* Terminal node constructor */
+/**
+ * Terminal node constructor
+ */
 TreeNode * newTerminalNode(const char * token, TerminalType tt)
 {
 	/* wrap the tree node constructor for a terminal */
 	return newTreeNode(token,tt,none);
 }
 
-/* Tree Node Destructor */
+/**
+ * Tree Node Destructor
+ */
 TreeNode * freeTreeNode(TreeNode * ftn)
 {
+    /* initialize variables */
     int i = 0;
     
-	/* if the given node exists */
+	/* ensure the given node exists */
     if (ftn)
     {
 		/* clear the pointers */
@@ -72,10 +88,12 @@ TreeNode * freeTreeNode(TreeNode * ftn)
     return NULL;
 }
 
-/* function to add a node as a child of another */
+/**
+ * Function to add a node as a child of another
+ */
 void addChild(TreeNode * tree, TreeNode * child)
 {
-	/* if both exist and aren't the same one */
+	/* ensure both exist and aren't the same one */
     if((tree && child) && tree !=child)
     {
 		/* and if the parent has room */
@@ -94,24 +112,30 @@ void addChild(TreeNode * tree, TreeNode * child)
 		{
 			/* panic if too many children assigned.*/
 			/* A very human response */
-			fprintf(error, "Too many children\n");
+			fprintf(error, "Too many children.\n");
 			exit(0);
 		}
     }
+    
+    /* panic if an invalid child provided */
     else
 	{
-		/* panic if an invalid child provided */
 		/* Again, very human */
 		fprintf(error,"attempt to add an invalid child.\n");
 		exit(0);
 	}
 }
 
-/* function to print out the contents of a node */
+/**
+ * Function to print out the contents of a node
+ * currently only does it if it's an id or number
+ */
 void printNode(TreeNode *tree)
 {
+    /* check if it's a terminal */
     if(tree->terminal)
     {
+        /* switch based on terminal type */
 		switch(tree->type.tType)
 		{
 			case nada:
@@ -132,11 +156,13 @@ void printNode(TreeNode *tree)
 				break;
 			case id:
 			{
+                /* print the prefix for identifiers */
 				fprintf(error, "id: ");
 				break;
 			}
 			case number:
 			{
+                /* print the prefix for numeric literals */
 				fprintf(error, "number: ");
 				break;
 			}
@@ -181,9 +207,11 @@ void printNode(TreeNode *tree)
 			default:
 				break;
 		}
-		/* if it's a terminal, just prnt it out */
+		/* print out the value */
 		fprintf(error, "%s", tree->tokenValue);
     }
+
+    /* handle nonterminals */
     else
     {
 		/* for rules, check which one and print it out */
@@ -335,9 +363,12 @@ void printNode(TreeNode *tree)
     }
 }
 
-/* function to print out a tree */
+/**
+ * Function to print out a tree
+ */
 void printTree(TreeNode *tree, int depth)
 {
+    /* initialize variables */
     int i = 0;
     
     /* indent */
@@ -352,11 +383,14 @@ void printTree(TreeNode *tree, int depth)
 	printTree(tree->child[i],depth+1);
 }
 
-/* function to duplicate a string */
+/**
+ * Function to duplicate a string
+ */
 char * copyString(char * s)
-{ 
-	int n;
-	char * t;
+{
+    /* initialize variable and pointer */
+	int n = 0;
+	char * t = NULL;
   
 	/* return NULL for null strings */
 	if (s==NULL) return NULL;
@@ -372,13 +406,16 @@ char * copyString(char * s)
 	return t;
 }
 
-/* Prototype constructor */
+/**
+ * Prototype constructor
+ */
 Prototype * newPrototype(char * name, VarKind retType, TreeNode * paramsList)
 {
+    /* get the parameter list */
 	TreeNode * currentParam = paramsList;
 	
 	/* allocate memory */
-	Prototype * p = malloc(sizeof(Prototype));
+	Prototype * p = (Prototype *) malloc(sizeof(Prototype));
 	
 	/* copy the name */
 	strncpy(p->name, name, MAXTOKENLEN);
@@ -400,11 +437,13 @@ Prototype * newPrototype(char * name, VarKind retType, TreeNode * paramsList)
 		}
 	}
 	
-	/* send back the new struct */
+	/* return the new struct */
 	return p;
 }
 
-/* Prototype destructor */
+/**
+ * Prototype destructor
+ */
 Prototype * destroyPrototype(Prototype * p)
 {
 	/* free memory */
@@ -414,23 +453,28 @@ Prototype * destroyPrototype(Prototype * p)
 	return NULL;
 }
 
-/* Symbol Table Constructor */
+/**
+ * Symbol Table Constructor
+ */
 SymbolTable * newSymbolTable()
 {
-	/* allocate it */
-	SymbolTable * s = malloc(sizeof(SymbolTable));
+	/* allocate memory */
+	SymbolTable * s = (SymbolTable *) malloc(sizeof(SymbolTable));
 	
 	/* initialize it */
 	s-> numSymbols = 0;
-	s->nextOffset = -2;
+	s-> nextOffset = -2;
 	
-	/* send it back */
+	/* return the new table */
 	return s;
 }
 
-/* Symbol Table Destructor */
+/**
+ * Symbol Table Destructor
+ */
 SymbolTable * destroySymbolTable(SymbolTable * s)
 {
+    /* initialize variables */
 	int i =0;
 	
 	/* if it exists*/
@@ -447,7 +491,9 @@ SymbolTable * destroySymbolTable(SymbolTable * s)
 	return NULL;
 }
 
-/* function to add a symbol to a table */
+/**
+ * Function to add a symbol to a table
+ */
 void addSymbol(TreeNode * typeSpec, char * name, Scope * scope, Prototype * proto, int size)
 {
 	/* get the number of symbols already in the table */
@@ -482,23 +528,36 @@ void addSymbol(TreeNode * typeSpec, char * name, Scope * scope, Prototype * prot
 	scope->symbols->numSymbols++;
 }
 
-/* function to print out the contents of a symbol table */
+/**
+ * Function to print out the contents of a symbol table
+ */
 void printSymbols(SymbolTable* symbols)
 {
-	int i = 0, j = 0;
+    /* initialize variables and pointer */
+	int i= 0, j = 0;
 	Prototype * proto = NULL;
+    
 	/* iterate and print */
-	
 	for(i=0; i< symbols->numSymbols; i++)
 	{
+        /* print the type and identifier */
 		if (symbols->types[i] == intType)
 			fprintf(error, "\tint %s", symbols->identifiers[i]);
 		else
 			fprintf(error, "\tvoid %s", symbols->identifiers[i]);
-		
+
+        /* print out the array notation, if any */
+        if (symbols->arraySizes[i] > 1)
+            fprintf(error, "[%d]", symbols->arraySizes[i]);
+        else if (symbols->arraySizes[i] == 0)
+            fprintf(error, "[]");
+        
+        /* print out the prototype, if any */
 		if (proto = symbols->functions[i])
 		{	
 			fprintf(error, "(");
+
+            /* print out the argument list, delimited by commas. */
 			for(j= 0; j < proto->numParams; j++)
 			{
 				if (j) fprintf(error, ", ");
@@ -510,25 +569,24 @@ void printSymbols(SymbolTable* symbols)
 			}
 			fprintf(error, ")");
 		}
-		
-		if (symbols->arraySizes[i] > 1)
-			fprintf(error, "[%d]", symbols->arraySizes[i]);
-		else if (symbols->arraySizes[i] == 0)
-			fprintf(error, "[]");
-		
+
+		/* go to the next line */
 		fprintf(error, "\n");
 	}
 }
 
-/* function to match a symbol within a scope */
+/** 
+ * Function to match a symbol within a scope
+ */
 int matchSymbol(char * sym, Scope * scope)
 {
+    /* initialize variable */
 	int i = 0;
 	
 	/* if this scope exists */
 	if (scope)
 	{
-		/* return true if it's in this scope's table */
+		/* return true if the symbol is in this scope's table */
 		for (i=0; i< scope->symbols->numSymbols; i++)
 			if (!strncmp(sym, scope->symbols->identifiers[i], MAXTOKENLEN)) return 1;
 	
@@ -540,37 +598,55 @@ int matchSymbol(char * sym, Scope * scope)
 	return 0;
 }
 
+/**
+ * Function to find the index of a symbol
+ */
 int indexOfSymbol(char *sym, SymbolTable * table)
 {
+    /* initialize variable */
 	int i = 0;
-	
+
+    /* endure the table exists */
 	if (table)
 	{
+        /* iterate through the list to find it */
 		for(i = 0; i < table->numSymbols; i++)
 			if (!strncmp(sym, table->identifiers[i], MAXTOKENLEN)) return i;
 	}
-	
+
+	/* if it wasn't found, return -1 error */
 	return -1;
 }
 
-/* function to look up a variable's offset by symbol */
+/**
+ * Function to look up a variable's offset by symbol
+ */
 int lookupOffset(char * sym, SymbolTable * table)
 {
+    /* initialize variables */
 	int i = 0;
 	
 	/* if the symbol table exists */
 	if (table)
 	{
+        /* iterate through the table to find the offset */
 		for(i=0; i < table->numSymbols; i++)
 			if (!strncmp(sym, table->identifiers[i], MAXTOKENLEN))
 				return table->offsets[i];
 	}
-	
+
+	/* return 0 on failure */
+    /* TODO: maybe this shuld be -1 to differentiate between failure
+       and no offset */
 	return 0;
 }
-/* function to add a scope as a subscope of another */
+
+/**
+ * Function to add a scope as a subscope of another
+ */
 void addSubScope(Scope * parent, Scope * child)
 {
+    /* ensure both exist and are not the same */
 	if ((parent && child) && parent != child)
 	{
 		/* if the parent has room */
@@ -598,26 +674,34 @@ void addSubScope(Scope * parent, Scope * child)
 	}
 }
 
-/* Scope constructor */
+/**
+ * Scope constructor
+ */
 Scope * newScope(char * name, Scope * parent)
 {
+    /* initialize variables */
 	int i = 0;
 	char pseudoName[MAXTOKENLEN];
+    Scope * s = NULL;
+    pseudoName[0] = 0;
+    
 	/* allocate memory */
-	Scope * s = malloc(sizeof(Scope));
-	
-	
+	s = (Scope *) malloc(sizeof(Scope));
+
+    /* if a name is provided, this is a function call. */ 
 	if (name)
     {
-		/* if a name is provided, this is a function call. */
         /* set the name */
-		strncpy(s->name, name, MAXTOKENLEN);
+        strncpy(s->name, name, MAXTOKENLEN);
 
         /* set the return scope level */
         s->returnScopes = 0;
     }
-	else {
-		/* otherwise grab the parent's name */
+
+    /* handle compound statements */
+	else
+    {
+		/* grab the parent's name */
 		strncpy(pseudoName, parent->name, MAXTOKENLEN);
 
         /* add a level of return scoping */
@@ -648,19 +732,20 @@ Scope * newScope(char * name, Scope * parent)
 		addSubScope(parent, s);
 	else 
 		s->parent = NULL;
-
-    /* fprintf(stdout, "New Scope: %s, %d levels to scope out a return\n", s->name, s->returnScopes); */
     
 	/* return pointer to the new scope */
 	return s;
 }
 
-/* Scope destructor */
+/**
+ * Scope destructor
+ */
 Scope * destroyScope(Scope * s)
 {
+    /* initialize variable */
 	int i = 0;
 	
-	/* if it exists */
+	/* if the scope exists */
 	if (s)
 	{
 		/* destroy subscopes if any */
@@ -681,17 +766,24 @@ Scope * destroyScope(Scope * s)
 	return NULL;
 }
 
+/**
+ * Function to get a scope by it's name
+ */
 Scope * getScopeByName(char * name, Scope * scope)
 {
+    /* initialize variable */
 	int i = 0;
-	
+
+    /* iterate through the scopes*/
 	for(i=0; i < scope->numSubScopes; i++)
 	{
+        /* return the scope if it's name is the one we're looking for */
 		if (!strncmp(name, scope->subScopes[i]->name, MAXTOKENLEN))
 		{
 			return scope->subScopes[i];
 		}
 	}
-	
+
+	/* if not found, return null */
 	return NULL;
 }

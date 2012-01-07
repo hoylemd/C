@@ -14,6 +14,7 @@
 
 %}
 
+/* macros */
 letter			[a-zA-Z]
 digit			[0-9]
 id				{letter}+
@@ -58,11 +59,16 @@ return				{return RETURN;}
 
 %%
 
+/**
+ * Function to get token data from the next bit
+ */
 int getToken()
 {
+    /* initialize variables */
     int placeholder = 0;
     static int firstTime = TRUE;
-    
+
+    /* set up io streams on first run */
     if (firstTime)
     {
 		firstTime = FALSE;
@@ -73,12 +79,14 @@ int getToken()
 	
 	/* grab the next token */
     placeholder = yylex();
-    
+
+    /* save identifiers and literals in the global field */
     if (placeholder == ID || placeholder == NUMBER) 
     {
 		/* if this is an id or number, put it in the token field */
 	    strncpy(tokenString, yytext, MAXTOKENLEN);
     }
-    
+
+    /* return the token type */
     return placeholder;
 }
