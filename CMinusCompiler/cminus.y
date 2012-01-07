@@ -25,9 +25,6 @@
 	/* flag to control whether or not to output the tree/symbol table */
 	extern PrintTreeFlag;
 	extern PrintTableFlag;
-
-	/* Temporary pointer */
-	TreeNode * temp = NULL;
 	
 	/* AST handle */
 	TreeNode * AST;
@@ -35,7 +32,6 @@
 	/* Scope Pointers */
 	Scope * global = NULL;
 	Scope * currentScope = NULL;
-	Scope * tempScope = NULL;
 	Prototype * currentPrototype = NULL;
 	
 	/* call stack */
@@ -398,6 +394,9 @@
 program:
 	declaration_list
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debugging message */
 		if(DEBUG) fprintf(error,"program\n");
 
@@ -433,16 +432,20 @@ program:
 /* returns a pointer to the first declaration in a sibling-linked 
 	list of declarations */
 declaration_list:
+    /* handle lists */
 	declaration_list declaration
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 		if (DEBUG) fprintf(error,"declaration list+\n");
 
-		/* find the last declaration in the $1 list */
-		temp = $1.node;
-		
-		if (temp && $2.node) 
+        /* handle both parts */
+		if ($1.node && $2.node)
 		{
+            /* find the last declaration in the $1 list */
+            temp = $1.node;
 			while(temp->sibling) temp = temp->sibling;
 
 			/* append the new one ($2) to the list */
@@ -451,19 +454,19 @@ declaration_list:
 			/* return a pointer to the first one */
 			$$.node = $1.node;
 		}
-		else
-		{
-			if (temp)
-				$$.node = temp;
-			
-			if ($2.node)
+
+        /* handle only the list */
+		else if ($1.node)
+				$$ = $1;
+
+        /* handle single declaration */
+		else if ($2.node)
 				$$ = $2;
-		}
 	}
 	|
+    /* handle individual declarations */
 	declaration
 	{
-		/* base case */
 		/* debug message */
 		if (DEBUG) fprintf(error,"declaration list\n");
 
@@ -497,6 +500,9 @@ declaration:
 function_declaration:
 	type_specifier ID
 	{
+        /* initialize pointers */
+        Scope * tempScope = NULL;
+
 		/* create the scope and switch to it*/
 		tempScope = newScope(tokenString, currentScope);
 		currentScope = tempScope;
@@ -549,6 +555,9 @@ function_declaration:
 params:
 	param_list
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 		if (DEBUG) fprintf(error,"params\n");
 
@@ -579,6 +588,9 @@ params:
 param_list:
 	param_list COMMA param
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 	    if (DEBUG) fprintf(error,"param_list, \n");
 
@@ -665,6 +677,9 @@ param:
 compound_statement:
 	OPENBRACE
 	{
+        /* initialize pointers */
+        Scope * tempScope = NULL;
+
 		if(!funScope)
 		{
 			/* if we're not in a function declaration */
@@ -684,6 +699,9 @@ compound_statement:
 	}
 	local_declarations
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* spawn the local declarations node */
 	    $$.node = newRuleNode(local_declarations);
 
@@ -698,6 +716,9 @@ compound_statement:
 	}
 	statement_list
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* spawn the statements node */
 	    $$.node = newRuleNode(statement_list);
 
@@ -747,6 +768,9 @@ compound_statement:
 local_declarations:
 	local_declarations variable_declaration
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 		if (DEBUG) fprintf(error,"Local declarations\n");
 
@@ -865,6 +889,9 @@ type_specifier:
 statement_list:
 	statement_list statement
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 	    if (DEBUG) fprintf(error,"statement list\n");
 
@@ -1484,6 +1511,9 @@ call:
 args:
 	arg_list
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 	    if (DEBUG) fprintf(error,"argument list\n");
 		
@@ -1508,6 +1538,9 @@ args:
 arg_list:
 	arg_list COMMA expression
 	{
+        /* initialize pointer */
+        TreeNode * temp = NULL;
+
 		/* debug message */
 	    if (DEBUG) fprintf(error,"+arg");
 		
