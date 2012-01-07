@@ -55,7 +55,6 @@ return				{return RETURN;}
 \(					{return OPENPAREN;}
 \)					{return CLOSEPAREN;}
 {openComment}.*{closeComment}	{/*skip comments*/}
-.					{return BAD;}
 
 %%
 

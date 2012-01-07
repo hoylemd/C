@@ -151,6 +151,7 @@ typedef struct scopeStruct
 	struct scopeStruct * parent;
 	struct scopeStruct * subScopes[MAXSUBSCOPES];
 	int numSubScopes;
+    int returnScopes;
 } Scope;
 
 /* Structure for a token */

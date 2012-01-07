@@ -1,11 +1,17 @@
+/**
+ * Yacc grammar and parsing file
+ */
+
 %{
-	
+	/* includes */
 	#include "globals.h"
 	#include <stdio.h>
-	#define DEBUG 0
 
+    /* definitions */
+	#define DEBUG 0
 	#define YYSTYPE nodeOrString
 
+    /* set yacc's debug flag to off */
 	int yydebug=0;
 
 	/* Scanner tracking externs */
@@ -16,7 +22,7 @@
 	extern FILE * out;
 	extern FILE * error;
 
-	/* flag to control whether or not to output the tree */
+	/* flag to control whether or not to output the tree/symbol table */
 	extern PrintTreeFlag;
 	extern PrintTableFlag;
 
@@ -50,77 +56,107 @@
 		char * string;
 	} nodeOrString;
 
-	/* Error handling routine */
+	/**
+     * Error handling routine
+     */
 	int yyerror(const char *str)
 	{
 		/* print out the error */
 		fprintf(stderr,"error: %s on line %d\n", str, lineno);
-		
+
+        /* set the flag */
 		errorEncountered = 1;
 		
 		return 0;
 	}
 
-	/* wrap routine. Just exit on EOF */
+	/**
+     * wrap routine. Just exit on EOF
+     */
 	int yywrap()
 	{
 		return 1;
 	}
 
-	/* Driver routine */
+	/**
+     * Driver routine
+     */
 	static int yylex(void)
 	{ 
 		return getToken();
 	}
 
-	/* declaration asserter */
+	/**
+     * Function to check if an identifier has been declared
+     */
 	int assertDeclared(char * id, Scope * scope)
 	{
+        /* check the symbol exists at this scope */
 		if (!matchSymbol(id, scope))
 		{
 			/* print out the error */
 			fprintf(stderr, "Undefined identifier '%s' at line %d\n", id, lineno);
-			
+
+            /* set the flag and return an error */
 			errorEncountered = 1;
 			return 1;
 		}
 		return 0;
 	}
 
-	/* redeclaration check & symbol adding */
+	/**
+     * Function to add a new symbol to the table.
+     * Checks for redeclaration.
+     */
 	void checkSymbol(TreeNode * typeSpec, char * iden, Scope * scope, Prototype * proto, int size)
 	{
+        /* initialize variables */
 		int i = 0;
+
 		/* check for redefinition*/
 		if (matchSymbol(iden, currentScope))
 		{
+            /* print error message */
 			fprintf(stderr, "Redeclared identifier '%s' at line %d\n", iden, lineno);
-			
+
+            /* set the flag */
 			errorEncountered = 1;
+
+            /* TODO: why is this here? */
 			i = scope->symbols->numSymbols;
 		}
+
+        /* if the symbol is not defined, add it */
 		else
 		{
 			/* check for array size */
 			if (size < 0)
 			{
+                /* print error message */
 				fprintf(stderr, "invalid array size specified at line %d\n", lineno);
-				
+
+                /* set flag */
 				errorEncountered = 1;
+
+                /* set size to zero */
+                /* this prevents redundant undeclared identifier variables */
 				size = 0;
 			}	
-			/* if no match in this scope, add the new identifier */
+
+            /* add the new identifier to the table */
 			addSymbol(typeSpec, iden, scope, proto, size);
 		}
-		
 	}
 	
-	/* function to get the type of an identifier by it's name */
+	/**
+     * Function to get the type of an identifier by it's name
+     */
 	VarKind getIdentifierType(char * iden, Scope * scope)
 	{
+        /* initialize variables */
 		int i = 0;
 		
-		/* if the given scope exists */
+		/* ensure the given scope exists */
 		if (scope)
 		{
 			/* iterate through the symbol list */
@@ -134,17 +170,21 @@
 			/* if it's not found at this scope, try one level above */
 			return getIdentifierType(iden, scope->parent);
 		}
-		
+
+        /* TODO: this should throw an error */
 		/* if nothing's found, call it a void */
 		return voidType;
 	}
 	
-	/* fucntion to get a function prototype by it's name */
+	/**
+     * Function to get a function prototype by it's name
+     */
 	Prototype * getPrototypeByName(char * iden, Scope * scope)
 	{
+        /* initialize variables */
 		int i = 0;
 		
-		/* if the given scope exists */
+		/* ensure the given scope exists */
 		if (scope)
 		{
 			/* iterate through the symbol list */
@@ -164,7 +204,9 @@
 		return NULL;
 	}
 	
-	/* function to push a call to the stack */
+	/**
+     * Function to push a call to the stack
+     */
 	void pushCall(Prototype * call)
 	{
 		/* if the stack isn't too big */
@@ -174,23 +216,28 @@
 			callStack[callStackLayer] = call;
 			callStackLayer++;
 		}
+
+        /* handle stack overflow */
 		else
 		{
 			/* panic if the stack is too big */
-			fprintf(stderr, "Too many calls\n");
+			fprintf(stderr, "Too many calls - stack overflow\n");
 			exit (0);
 		}
 	}
 	
-	/* function to pop a call from the stack */
+	/**
+     * Function to pop a call from the stack.
+     */
 	Prototype * popCall()
 	{
-		Prototype * p;
+        /* initialize pointer */
+		Prototype * p = NULL;
 		
-		/* if calls are on the stack */
+		/* ensure calls are on the stack */
 		if (callStackLayer > 0)
 		{
-			/* pop it */
+			/* get the top call */
 			callStackLayer--;
 			p = callStack[callStackLayer];
 		}
@@ -202,29 +249,40 @@
 
 	}
 	
-	/* function to move contect down into a function call */
+	/**
+     * Function to move context down into a function call
+     */
 	Prototype * contextDown(char * func, Scope * scope, Prototype * currCall)
 	{
+        /* push the current function to the stack, if any */
 		if (currCall)
 			pushCall(currentCall);
+
+        /* return the call's prototype */
 		return getPrototypeByName(func, scope);
 	}
-	
-	/* function to move context up out of a function call */
+
+	/*
+     * Function to move context up out of a function call
+     */
 	Prototype * contextUp()
 	{
+        /* wrap around the pop function */
 		return popCall();
 	}
 	
 	
-	/* function to type-check call arguments */
+	/*
+     * Function to type-check call arguments
+     */
 	int argumentsCheck(Prototype * call, TreeNode * arguments)
 	{
+        /* initialize variables */
 		int i = 0;
 		TreeNode * currentArg = NULL;
-		VarKind currentParam;
+		VarKind currentParam = voidType;
 		
-		/* if no call was given we've already reported the error */
+		/* if no call was given we've already reported the error. TODO:(why?) */
 		if (!call)
 			return 0;
 		
@@ -234,22 +292,28 @@
 			if (call->numParams == 0)
 				/* if the function wasn't expecting any its ok */
 				return 0;
+
+            /* if it was expecting arguments*/
 			else 
 			{
+                /* print error message */
 				fprintf(error, "No arguments specified for function %s on line %d Expected: %d\n",
 						call->name, lineno, call->numParams);
-				
+
+                /* raide error flag and return */
 				errorEncountered = 1;
 				return 0;
 			}
-
 		}
+
+        /* grab the arguments tree */
 		else
 			currentArg = arguments->child[0];
 		
 		/* step through the arguments list */
 		while (currentArg)
 		{
+            /* advance past the commas */
 			if (currentArg->type.tType == comma)
 				currentArg = currentArg->sibling;
 			else
@@ -263,11 +327,10 @@
 					/* check them */
 					if (currentParam != currentArg->varType)
 					{
-						/* ensure arrays are used correctly */
-						if (currentParam)
-						
+						/* print error */
 						fprintf(error, "Type mismatch in argument %d on line %d\n", i, lineno);
-						
+
+                        /* raise flag */
 						errorEncountered = 1;
 					}
 						
@@ -288,26 +351,29 @@
 					/* report error */
 					fprintf(error, "too many arguments(%d) for function %s on line %d. Expected: %d\n",
 							i, call->name, lineno, call->numParams);
-					
+
+                    /* raise flag */
 					errorEncountered = 1;
 					break;
 				}
 			}
 		}
 		
-		/* if not enough arguments have been given, report it */
+		/* if not enough arguments have been given */
 		if (i < call->numParams)
 		{
+            /* print error */
 			fprintf(error, "not enough arguments(%d) for function %s on line %d. Expected: %d\n",
 					i, call->name, lineno, call->numParams);
-			
+
+            /* raise flag */
 			errorEncountered = 1;
 		}
 	}
 %}
 
 /* bookkeeping tokens */
-%token BAD
+/* %token BAD */
 
 /* keyword tokens */
 %token IF ELSE INT VOID RETURN WHILE
@@ -333,13 +399,13 @@ program:
 	declaration_list
 	{
 		/* debugging message */
-		if(DEBUG) fprintf(stderr,"program\n");
+		if(DEBUG) fprintf(error,"program\n");
 
 		/* spawn the node */
 		$$.node = newRuleNode(declaration_list);
 		
-		/* iterate through $1's siblings: the list of declarations
-			and add them all to this node */
+		/* iterate through $1's siblings (the list of declarations)
+			and add them all to this node as children*/
 		temp = $1.node;
 		while(temp) 
 		{
@@ -347,14 +413,14 @@ program:
 		    temp = temp->sibling;
 		}
 		
-		/* print the global symbol list */
+		/* print the global symbol list, If required */
 		if (PrintTableFlag)
 		{
 			fprintf(stderr, "Global Symbol List:\n");
 			printSymbols(global->symbols);
 		}
 		
-		/* print the completed tree out */
+		/* print the completed tree out, if required. */
 		if (PrintTreeFlag)
 			printTree($$.node,0);
 		

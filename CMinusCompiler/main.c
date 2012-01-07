@@ -927,8 +927,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 else
                 {
                     cCode = appendCode(aCode, bCode);
-                    disconnectCode(aCode);
-                    disconnectCode(bCode);
+                    aCode = disconnectCode(aCode);
+                    bCode = disconnectCode(bCode);
                     aCode = cCode;
                 }
                 
@@ -947,8 +947,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 
                 /* add it to this code section's list */
                 cCode = appendCode(aCode, bCode);
-                disconnectCode(aCode);
-                disconnectCode(bCode);
+                aCode = disconnectCode(aCode);
+                bCode = disconnectCode(bCode);
                 aCode = cCode;
 
                 /* generate code to store the right operand in the right temporary variable */
@@ -1017,7 +1017,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case lessOrEqual:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterThan,
-                                              OP1, 1, PC, "skip next line if ops less than or equal");
+                                              OP1, 1, PC, "skip next line if ops greater than");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1026,7 +1026,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case moreOrEqual:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessThan,
-                                              OP1, 1, PC, "skip next line if ops greater than or equal");
+                                              OP1, 1, PC, "skip next line if ops less than");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1035,7 +1035,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case less:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterEqual,
-                                              OP1, 1, PC, "skip next line if ops greater than");
+                                              OP1, 1, PC, "skip next line if ops greater than or equal");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1044,7 +1044,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case more:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessEqual,
-                                              OP1, 1, PC, "skip next line if ops less than");
+                                              OP1, 1, PC, "skip next line if ops less than or equal");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1064,8 +1064,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 else
                 {
                     cCode = appendCode(aCode, bCode);
-                    disconnectCode(aCode);
-                    disconnectCode(bCode);
+                    aCode = disconnectCode(aCode);
+                    bCode = disconnectCode(bCode);
                     aCode = cCode;
                 }
 
@@ -1085,8 +1085,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
 				{
 					cCode = appendCode(aCode, bCode);
-					disconnectCode(aCode);
-					disconnectCode(bCode);
+					aCode = disconnectCode(aCode);
+					bCode = disconnectCode(bCode);
 					aCode = cCode;
 				}
 				/* add code to store it in the left temporary variable */
@@ -1103,8 +1103,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				bCode = evaluateExpression(expr->child[2], scope);
 				/* add it to this code's list */
 				cCode = appendCode(aCode, bCode);
-				disconnectCode(aCode);
-				disconnectCode(bCode);
+				aCode = disconnectCode(aCode);
+				aCode = disconnectCode(bCode);
 				aCode = cCode;
 				
 				/* add code to store it in the right temporary variable */
@@ -1161,8 +1161,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
 				{
 					cCode = appendCode(aCode, bCode);
-					disconnectCode(aCode);
-					disconnectCode(bCode);
+					aCode = disconnectCode(aCode);
+					bCode = disconnectCode(bCode);
 					aCode = cCode;
 				}
 
@@ -1182,8 +1182,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
 				{
 					cCode = appendCode(aCode, bCode);
-					disconnectCode(aCode);
-					disconnectCode(bCode);
+					aCode = disconnectCode(aCode);
+					bCode = disconnectCode(bCode);
 					aCode = cCode;
 				}
 				
@@ -1202,8 +1202,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 
 				/* add it to this code section */
 				cCode = appendCode(aCode, bCode);
-				disconnectCode(aCode);
-				disconnectCode(bCode);
+				aCode = disconnectCode(aCode);
+				bCode = disconnectCode(bCode);
 				aCode = cCode;
 				
 				/* generate code to store it in the right temporary variable */
@@ -1259,8 +1259,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
 				{
 					cCode = appendCode(aCode, bCode);
-					disconnectCode(aCode);
-					disconnectCode(bCode);
+					aCode = disconnectCode(aCode);
+					bCode = disconnectCode(bCode);
 					aCode = cCode;
 				}
 
@@ -1305,8 +1305,8 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 						/* generate code to evaluate the argument */
 						bCode = evaluateExpression(arg, scope);
 						cCode = appendCode(aCode, bCode);
-						disconnectCode(aCode);
-						disconnectCode(bCode);
+						aCode = disconnectCode(aCode);
+						bCode = disconnectCode(bCode);
 						aCode = cCode;
 						
 						/* generate code to store it */
@@ -1405,7 +1405,7 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 	InstructionList * iList = NULL; 
 	int functionsCompound = 0, subScope = 0, op1Offset = 0;
 	int memOffset = 0, nextLineNo = functionOffset, lines = 0;
-    int index = 0;
+    int index = 0, i = 0;
 	char comment[128];
     comment[0] = 0;
 
@@ -1459,8 +1459,8 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 
                         /* add the body code to the header code */
                         bCode = appendCode(body, aCode);
-                        disconnectCode(body);
-                        disconnectCode(aCode);
+                        body = disconnectCode(body);
+                        aCode = disconnectCode(aCode);
                         body = bCode;
 
 						/* generate the function footer */
@@ -1497,6 +1497,9 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 			/* handle compound statements */
 			case compound_statement:
 			{
+                /*
+                fprintf(error, "compount statement!\n");
+                printTree(currentNode, 0);*/
                 
                 /* get the first statement node */
 				currentNode = tree->child[2]->child[0];
@@ -1523,8 +1526,8 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 
                             /* add the evaluation code to the existing code */
 							bCode = appendCode(body, aCode);
-							disconnectCode(body);
-							disconnectCode(aCode);
+							body = disconnectCode(body);
+							aCode = disconnectCode(aCode);
 							body = bCode;
 
                             /* handle compound statements in result block */
@@ -1572,8 +1575,8 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 
                             /* add the body code */
 							bCode = appendCode(body, aCode);
-							disconnectCode(body);
-							disconnectCode(aCode);
+							body = disconnectCode(body);
+							aCode = disconnectCode(aCode);
 							body = bCode;
 
                             /* generate code to pop the frame off the stack */
@@ -1604,8 +1607,8 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 							else
 							{
 								bCode = appendCode(body, aCode);
-								disconnectCode(body);
-								disconnectCode(aCode);
+								body = disconnectCode(body);
+								aCode = disconnectCode(aCode);
 								body = bCode;
 							}
 
@@ -1616,33 +1619,75 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 						/* handle return statements */
 						case return_statement:
 						{
-
+                            /*fprintf(error, "return statement!\n");
+                            printTree(currentNode, 0);*/
+                            
                             /* get the node for the expression to return */
 							subNode = currentNode->child[1];
 
                             /* check if there is an expression to evaluate */
 							if (!(subNode->terminal && subNode->type.tType == endOfLine))
 							{
-
+                                /*fprintf(error, "evaluating return expression\n");
+                                printTree(subNode, 0);*/
+                                
                                 /* generate code for the expression */
 								aCode = evaluateExpression(subNode, scope);
-								if (!body) 
+
+                                /* fprintf(error, "evaluation code:\n");
+                                printCode(error, aCode); */
+                                
+								if (!body)
+                                {
 									body = aCode;
+                                    aCode = NULL;
+                                }
 								else
 								{
 									bCode = appendCode(body, aCode);
-									disconnectCode(body);
-									disconnectCode(aCode);
+									body = disconnectCode(body);
+									aCode = disconnectCode(aCode);
 									body = bCode;
 								}
 							}
+							else
+                                aCode = NULL;
 							
-							/* add code to return to the caller*/
+							/* set up code containers */
+                            if (!aCode) aCode = newAssemblyCode();
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
+
+                            /* add code to return to function top level scope */
+                            for (i = 0; i < scope->returnScopes; i++)
+                            {
+                                inst = newInstruction( RegisterMemoryInstruction, NoneR, Load,
+                                                       FP, 0, FP, "pop frame");
+                                iList = appendInstruction(iList, inst);
+                            }
+                            
+                            /* add code to return to the caller*/
                             inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
                                                   PC, -1, FP, "return to caller");
 							iList = appendInstruction(iList, inst);
+                            aChunk->iList = iList;
+                            appendChunk(aCode, aChunk);
+                            if (!body)
+                            {
+                                body = aCode;
+                                aCode = NULL;
+                            }
+                            else
+                            {
+                                bCode = appendCode(body, aCode);
+                                body = disconnectCode(body);
+                                aCode = disconnectCode(aCode);
+                                body = bCode;
+                                bCode = NULL;
+                            }
+                            
+                            /* finish with this statement */
+                            break;
 						}
 					}
 
@@ -1774,10 +1819,6 @@ main(int argc, char * argv[])
 		
 		/* generate the AST */
 		yyparse();
-
-		/* print the tree, if flagged to do so */
-        if (PrintTreeFlag)
-            printTree(AST, 0);
 		
 		/* emit assembly code */
 		if (!errorEncountered)

@@ -608,12 +608,21 @@ Scope * newScope(char * name, Scope * parent)
 	
 	
 	if (name)
-		/* if a name is provided, add it in */
+    {
+		/* if a name is provided, this is a function call. */
+        /* set the name */
 		strncpy(s->name, name, MAXTOKENLEN);
+
+        /* set the return scope level */
+        s->returnScopes = 0;
+    }
 	else {
 		/* otherwise grab the parent's name */
 		strncpy(pseudoName, parent->name, MAXTOKENLEN);
-		
+
+        /* add a level of return scoping */
+        s->returnScopes = parent->returnScopes + 1;
+        
 		/* if there's room */
 		if (strlen(pseudoName) < MAXTOKENLEN -2)
 		{
@@ -639,7 +648,9 @@ Scope * newScope(char * name, Scope * parent)
 		addSubScope(parent, s);
 	else 
 		s->parent = NULL;
-	
+
+    /* fprintf(stdout, "New Scope: %s, %d levels to scope out a return\n", s->name, s->returnScopes); */
+    
 	/* return pointer to the new scope */
 	return s;
 }

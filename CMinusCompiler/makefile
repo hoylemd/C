@@ -24,9 +24,12 @@ clean :
 	rm -f lex.yy.c y.tab.c y.tab.h *~ *.o cm y.output out*.txt *.tm tm valgrind-results.txt
 	cd vm && $(MAKE) clean
 	cd cminusCode && rm -f *~
+
+tidy :
+	rm -f cminus.tab.c cminus.tab.h
 	
-test : clean cm
-	./cm cminusCode/1.cm output.tm > result.txt
+test : clean cm tm tidy
+	./cm cminusCode/1.cm output.tm
 
 memtest : clean cm
 	valgrind --log-file=valgrind-results.txt ./cm cminusCode/1.cm output.txt 
