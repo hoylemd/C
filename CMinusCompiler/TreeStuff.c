@@ -520,9 +520,9 @@ void addSymbol(TreeNode * typeSpec, char * name, Scope * scope, Prototype * prot
 		scope->symbols->offsets[i] = scope->symbols->nextOffset;
 		scope->symbols->nextOffset--;
 	}
-	/* save the array size */	
+	
+	/* save the array size */
 	scope->symbols->arraySizes[i] = size;
-
 	
 	/* increment the counter */
 	scope->symbols->numSymbols++;

@@ -23,10 +23,13 @@
 #define TRUE 1
 #endif
 
-extern FILE* source; /* source code text file */
-extern FILE* out; /* listing output text file */
+/* io streams */
+extern FILE* source;
+extern FILE* out;
 extern FILE* error;
-extern int lineno; /* source line number for listing */
+
+/* source line number for listing */
+extern int lineno;
 
 /* enumeration for variable types */
 typedef enum {
@@ -60,7 +63,7 @@ typedef enum {
     term,
     mulop,
     factor,
-	var,
+    var,
     call,
     args
 } Rule;
@@ -106,62 +109,113 @@ typedef union nodeType
     TerminalType tType;
 } NodeType;
 
-/* strcture for tree nodes */
+/**
+ * structure for tree nodes
+ */
 typedef struct treeNode
 {
+    /* child and sibling pointers */
     struct treeNode * child[MAXCHILDREN];
-    struct treeNode * sibling;
-    int line;
-    int terminal;
     int childCount;
+    struct treeNode * sibling;
+
+    /* line number */
+    int line;
+
+    /* terminal flag */
+    int terminal;
+
+    /* node and evaluation types */
     NodeType type;
 	VarKind varType;
+
+    /* the token value */
     char tokenValue[MAXTOKENLEN];
 } TreeNode;
 
-/* structure for a function prototype */
+/**
+ * Structure for a function prototype
+ */
 typedef struct funProto
 {
+    /* the name of the function */
 	char name[MAXTOKENLEN];
+
+    /* return type */
 	VarKind type;
-	VarKind params[MAXCHILDREN];
+
+    /* parameter types */
+    VarKind params[MAXCHILDREN];
+    int numParams;
+
+    /* TODO: what's this for? */
 	int array[MAXCHILDREN];
-	int numParams;
+
 } Prototype;
 
-/* structure for a symbol table */
+/**
+ * Structure for a symbol table
+ */
 typedef struct symbolTable
 {
-	char identifiers[MAXSYMBOLS][MAXTOKENLEN];
+    /* the number of symbols (rows filled)*/
+    int numSymbols;
+    
+    /* symbol token string column */
+    char identifiers[MAXSYMBOLS][MAXTOKENLEN];
+
+    /* symbol type column */
 	VarKind types[MAXSYMBOLS];
+
+    /* prototype column */
 	Prototype * functions[MAXSYMBOLS];
-	int arraySizes[MAXSYMBOLS]; /* 0 means it's an array placeholder, 1 means it's a regular variable, 1+ means an array*/
-	int offsets[MAXSYMBOLS];
+
+    /* column for the array degree of the symbol */
+    /* 0 means it's an array placeholder, 1 means it's a regular variable, 1+ means an array*/
+	int arraySizes[MAXSYMBOLS];
+
+    /* offset column*/
+    int offsets[MAXSYMBOLS];
+
+    /* line number column*/
 	int lineNo[MAXSYMBOLS];
+
+    /* the offset for the next symbol */
 	int nextOffset;
-	int numSymbols;
 } SymbolTable;
 
-/* structure for a scope */
+/**
+ * Structure for a scope
+ */
 typedef struct scopeStruct
 {
+    /* the symbol table for this scope */
 	SymbolTable * symbols;
-	int number;
+
+    /* the name of this scope */
 	char name[MAXTOKENLEN];
+
+    /* pointers to the parent and child scopes */
 	struct scopeStruct * parent;
 	struct scopeStruct * subScopes[MAXSUBSCOPES];
 	int numSubScopes;
+
+    /* count of how many scopes lie between this one and the function */
+    /* used for return statements inside nexted scopes */
     int returnScopes;
 } Scope;
 
-/* Structure for a token */
+/**
+ * Structure for a token
+ * TODO: is this used?
+ */
 typedef struct
 {
     int id;
     char * val;
 } tokenStruct;
 
-/* Utility Functions */
+/* Utility Function prototypes */
 /* string copying function */
 char * copyString(char *);
 
