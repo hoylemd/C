@@ -79,7 +79,7 @@
 		if (!matchSymbol(id, scope))
 		{
 			/* print out the error */
-			fprintf(error, "Undefined identifier '%s' at line %d\n", id, lineno);
+			fprintf(stderr, "Undefined identifier '%s' at line %d\n", id, lineno);
 			
 			errorEncountered = 1;
 			return 1;
@@ -94,7 +94,7 @@
 		/* check for redefinition*/
 		if (matchSymbol(iden, currentScope))
 		{
-			fprintf(error, "Redeclared identifier '%s' at line %d\n", iden, lineno);
+			fprintf(stderr, "Redeclared identifier '%s' at line %d\n", iden, lineno);
 			
 			errorEncountered = 1;
 			i = scope->symbols->numSymbols;
@@ -104,7 +104,7 @@
 			/* check for array size */
 			if (size < 0)
 			{
-				fprintf(error, "invalid array size specified at line %d\n", lineno);
+				fprintf(stderr, "invalid array size specified at line %d\n", lineno);
 				
 				errorEncountered = 1;
 				size = 0;

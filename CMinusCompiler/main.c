@@ -1,29 +1,50 @@
+/**
+* program to compile c-minus source code into a c-minus virtual machine program
+*/
+
 #include "main.h"
 
+/**
+ * Function to push a scopt to the stack
+ */
 void pushScope(Scope * scope)
 {
 	scopeStack[scopeCount] = scope;
 	scopeCount++;
 }
 
+/**
+ * Function to pop a scope off the stack
+ */
 Scope * popScope()
 {
 	scopeCount--;
 	return scopeStack[scopeCount];
 }
 
+/**
+ * Function to get a numbered scope
+ */
 Scope * getScope(int i)
 {
+    /**
+     * Todo: Check if and how this is used
+     */
 	if(i < scopeCount)
 		return scopeStack[scopeCount - i];
 	else
 		return NULL;
 }
 
+/**
+ * Function to get the string command for a register operation opcode
+ */
 char * ROpCodeString(rOpCode r)
 {
+    /* validate input */
 	if (r)
 	{
+        /* select the string */
 		switch (r)
 		{
 			case Halt:
@@ -40,17 +61,28 @@ char * ROpCodeString(rOpCode r)
 				return "    MUL";
 			case Divide:
 				return "    DIV";
+
+            /* return nothing on unrecognized opcode */
 			default:
 				return "";
 		}
 	}
+
+	/* return nothing if no opcode given */
 	else
 		return "";
 }
+
+/**
+* Function to get the string command for a register/memory operation opcode
+*/
 char * RmOpCodeString(rmOpCode rm)
 {
+    /* validate input */
 	if(rm)
 	{
+
+        /* select the appropriate string */
 		switch (rm)
 		{
 			case Load:
@@ -73,54 +105,101 @@ char * RmOpCodeString(rmOpCode rm)
 				return "    JEQ";
 			case JumpNotEqual:
 				return "    JNE";
+
+             /* return nothing on unrecognized opcode */
 			default:
 				return "";
 		}
 	}
+
+	/* return nothing if no opcode given */
 	else
 		return "";
 }
 
-Instruction * newInstruction(InstructionType type, rOpCode rCode, rmOpCode rmCode,int o1, int o2, int o3, char * label)
+/**
+* Function to generate an instruction structure from it's component data
+*/
+Instruction * newInstruction(InstructionType type, rOpCode rCode, rmOpCode rmCode,int o1, int o2, int o3,
+                             char * label)
 {
+    /* allocate memory for the struct */
 	Instruction * nInst = malloc(sizeof(Instruction));
+
+    /* get the opcode */
 	nInst->type = type;
 	if (type == RegisterInstruction)
 		nInst->oc.rCode = rCode;
 	else if(type == RegisterMemoryInstruction)
 		nInst->oc.rmCode = rmCode;
+
+    /* store the operands */
 	nInst->o1= o1;
 	nInst->o2= o2;
 	nInst->o3= o3;
+
+    /* initialize list pointers */
 	nInst->prev = NULL;
 	nInst->next = NULL;
+
+    /* initialize id number */
 	nInst->num = 0;
+
+    /* store the label */
 	strncpy(nInst->label, label, LABELSIZE);
+
+    /* return the structure */
 	return nInst;
 }
 
+/**
+ * Destructor for an instruction structure
+ * for redundant safety, the result of this function should be
+ * assigned to the target's pointer.
+ */
 Instruction * destroyInstruction(Instruction * i)
 {
+    /* Ensure it exists */
 	if (i) 
 	{
+        /* clear pointers */
 		i->prev = NULL;
 		i->next = NULL;
+
+        /* free the struct */
 		free(i);
 	}
+
+	/* return a NULL pointer */
 	return NULL;
 }
 
+/**
+ * Function to print an instruction to a file such that it can
+ * be interpreted by the VM.
+ */
 void printInstruction(FILE * target, Instruction * inst)
 {
-	int spaces = 0, i;
-	
+    /**
+     * TODO: handle codes of > 999 instructions.
+     */
+    
+    /* initialize variables */
+	int spaces = 0, i = 0;
+
+    /* ensure we actually have an instruction */
 	if (inst)
 	{
+        /* determine the number of spaces needed for line numbers */
+        /* only correctly handles instructions up to # 999 */
 		if (inst->num < 10) spaces = 2;
 		else if (inst->num < 100) spaces = 1;
 		else spaces = 0;
+
+		/* space the line number correctly */
 		for(i=0;i<spaces;i++)fprintf(target, " ");
-		
+
+        /* call the appropriate print routine */
 		if (inst->type == RegisterMemoryInstruction)
 			fprintf(target, "%d:%s  %d,%d(%d) \t%s\n", inst->num, RmOpCodeString(inst->oc.rCode), inst->o1, inst->o2, inst->o3, inst->label);
 		else
@@ -128,88 +207,141 @@ void printInstruction(FILE * target, Instruction * inst)
 	}
 	else
 	{
+        /* print error message if the instruction was null */
 		fprintf(error, "Cannot print null instruction\n");
 	}
-	
 }
 
+/**
+ * Function to create a new instruction list structure
+ */
 InstructionList * newInstructionList()
 {
+    /* Allocate memory */
 	InstructionList * iList = malloc(sizeof(InstructionList));
+
+    /* initialize fields */
 	iList->numInstr = 0;
 	iList->first = NULL;
 	iList->last = NULL;
-	
+
+    /* return pointer */
 	return iList;
 }
 
+
+/**
+* Function to destruct an instruction list structure
+* for redundant safety, the result of this function should be
+* assigned to the target's pointer.
+*/
 InstructionList * destroyInstructionList(InstructionList * iList)
 {
-	Instruction * currentI, * nextI;
-	
+    /* initialize variables */
+	Instruction * currentI = NULL, * nextI = NULL;
+
+    /* ensure we have a list */
 	if (iList)
 	{
+        /* set up pointer */
 		nextI = iList->first;
+
+        /* disconnect the first and last pointers */
 		iList->first = NULL;
 		iList->last = NULL;
-		
+
+        /* iterate through the list and... */
 		while(nextI)
 		{
+            /* get the next member of the list */
 			currentI = nextI;
 			nextI = currentI->next;
+
+            /* destruct the current member */
 			destroyInstruction(currentI);
 		}
-		
+
+		/* free the list */
 		free(iList);
 	}
-	
+
+	/* return a null pointer */
 	return NULL;
 }
 
+/**
+* Function to append an instruction to a list
+*/
 InstructionList * appendInstruction(InstructionList * list, Instruction * i)
 {
+    /* ensure we actually have both operands */
 	if(list && i)
 	{
+        /* handle lists with members */
 		if (list->first)
 		{
+            /* connect the instruction to the last member */
 			list->last->next = i;
 			i->prev = list->last;
 			list->last = i;
 		}
+
+		/* handle empty lists */
 		else
 		{
+            /* connect the list's pointers to the instruction */
 			list->first = i;
 			list->last = i;
 		}
+
+		/* set the line numbers and counters correctly */
 		i->num = list->numInstr;
 		list->numInstr++;
 	}
-	
+
+	/* return the modified list */
 	return list;
 }
 
-/* if pos is +, seek from beginning of list. -, from end */
+/**
+ * Function to insert an instruction at a specific line number
+ * if the line number provided is negative, seek from the end of the list.
+ * just like python!
+ */
 InstructionList * insertInstruction(InstructionList * list, Instruction * inst, int pos)
 {
-	Instruction * currentI;
+
+    /**
+     * TODO: handle negative seek that goes to head.
+     */
+    
+    /* initalize variables */
+	Instruction * currentI = NULL;
 	int i = 0;
+
+    /* ensure we have all operands */
 	if (list && inst)
 	{
+        /* ensure we have a reasonable position */
 		if (abs(pos) < list->numInstr)
 		{
-			if (pos < 0)
+            /* handle seeking directions */
+			if (pos < 0) /* negative */
 			{
+                /* find the instruction at this position */
 				currentI = list->last;
 				for(i=0; i < abs(pos); i++)
 					currentI = currentI->prev;
 			}
-			else
+			else /* positive */
 			{
+                /* find the instruction at this position */
 				currentI = list->first;
 				for(i=0; i < pos; i++)
 					currentI = currentI->next;
 			}
-			
+
+			/* insert the instruction, handling pos 0 case */
 			if(pos != 0)
 			{
 				currentI->prev->next = inst;
@@ -217,7 +349,8 @@ InstructionList * insertInstruction(InstructionList * list, Instruction * inst, 
 			}
 			currentI->prev = inst;
 			inst->next = currentI;
-			
+
+            /* update the line numbers */
 			inst->num = currentI->num;
 			list->numInstr++;
 			while(currentI)
@@ -229,13 +362,22 @@ InstructionList * insertInstruction(InstructionList * list, Instruction * inst, 
 	}
 }
 
+/**
+* Function to print an instruction list to a file such that it can
+* be interpreted by the VM.
+*/
 void printInstructionList(FILE * target, InstructionList * iList)
 {
-	Instruction * currentI;
-	
+    /* initialize variables */
+	Instruction * currentI = NULL;
+
+    /* ensure we have a list */
 	if (iList)
 	{
+        /* get the first member */
 		currentI = iList->first;
+
+        /* iterate through the list and print each instruction */
 		while(currentI)
 		{
 			printInstruction(target, currentI);
@@ -243,28 +385,50 @@ void printInstructionList(FILE * target, InstructionList * iList)
 		}
 	}
 	else
-		fprintf(error, "Cannot print null Instruction List\n");
+        /* complain if we werent given a list */
+        fprintf(error, "Cannot print null Instruction List\n");
 }
 
-
+/**
+* Function create a new assembly chunk structure
+*/
 AssemblyChunk *newAssemblyChunk()
 {
-	return malloc(sizeof(AssemblyChunk));
+    /* allocate memory variables */
+    AssemblyChunk * aChunk = (AssemblyChunk *) malloc(sizeof(AssemblyChunk));
+
+    /* initialize fields */
+    aChunk->preamble[0] = 0;
+    aChunk->iList = NULL;
+    aChunk->postamble[0] = 0;
+    aChunk->next = NULL;
+    aChunk->prev = NULL;
 }
 
+/**
+ * Function to append a chunk of assembly code to an AssemblyCode
+ */
 AssemblyCode * appendChunk(AssemblyCode * aCode, AssemblyChunk *aChunk)
 {
-	int offset;
+    /* initialize variables */
+	int offset = 0;
 	Instruction * inst = NULL;
+
+    /* check we have both operands */
 	if (aCode && aChunk)
 	{
+        /* get the line number offset */
 		offset = instructionsInAssembly(aCode);
+
+        /* if the code already has instructions, append the chunk */
 		if(aCode->chunkCount)
 		{
 			aCode->last->next = aChunk;
 			aChunk->prev = aCode->last;
 			aCode->last = aChunk;
 		}
+
+		/* otherwise, just add it to the code */
 		else
 		{
 			aCode->first = aChunk;
@@ -273,10 +437,8 @@ AssemblyCode * appendChunk(AssemblyCode * aCode, AssemblyChunk *aChunk)
 		aCode->chunkCount++;
 		
 		/* shift the instruction numbers */
-		
 		if (aChunk->iList)
 			inst = aChunk->iList->first;
-		
 		while(inst)
 		{
 			inst->num = inst->num + offset;
@@ -285,81 +447,163 @@ AssemblyCode * appendChunk(AssemblyCode * aCode, AssemblyChunk *aChunk)
 	}
 }
 
+/**
+ * Function to print out a code chunk to a stream
+ */
 void printChunk(FILE * target, AssemblyChunk * aChunk)
 {
-	if(aChunk)
+    /* ensure we have a chunk and stream */
+	if(aChunk && target)
 	{
+        /* print the preamble, if any */
 		if (strlen(aChunk->preamble)) fprintf(target, "%s\n", aChunk->preamble);
+
+        /* print the instructions, if any */
 		if (aChunk->iList) printInstructionList(target, aChunk->iList);
+
+        /* print the postamble, if any */
 		if (strlen(aChunk->postamble)) fprintf(target, "%s\n", aChunk->postamble);
 	}
-	else
-		fprintf(error, "Cannot print null chunk\n");
+
+	/* complain if a null chunk was passed */
+	else if (target)
+        fprintf(error, "Cannot print null chunk\n");
+
+    /* complain if a null stram was passed */
+
+    else if (aChunk)
+        fprintf(error, "Cannot print to null stream.\n");
 }
 
+/**
+ * Function to print a Code section to a stream
+ */
 void printCode(FILE * target, AssemblyCode * aCode)
 {
-	AssemblyChunk * aChunk;
-	if(aCode)
+    /* initialize variables */
+	AssemblyChunk * aChunk = NULL;
+
+    /* ensure we have a code section and a stream */
+	if(aCode && target)
 	{
+        /* get the first code chunk */
 		aChunk = aCode->first;
-		
+
+        /* iterate through the list */
 		while(aChunk)
 		{
+            /* print all chunks out */
 			printChunk(target, aChunk);
 			aChunk = aChunk->next;
 		}
 	}
-	else
-		fprintf(error, "Cannot print null code\n");
+
+	/* complain if a null code section is passed */
+	else if (target)
+        fprintf(error, "Cannot print null code.\n");
+
+    /* complain if a null stream is passed */
+    else if (target)
+        fprintf(error, "Cannot print to a null stream.\n");
 }
 
+/**
+ * Function to create a new code section
+ */
 AssemblyCode * newAssemblyCode()
 {
+    /* allocate memory */
 	AssemblyCode * aCode = malloc(sizeof(AssemblyCode));
-	
+
+    /* initialize members */
 	aCode->chunkCount = 0;
 	aCode->first = NULL;
 	aCode->last = NULL;
+
+    /* return the new structure */
 	return aCode;
 }
 
-int instructionsInAssembly(AssemblyCode * aCode)
+/**
+ * Function to disconnect a code section from it's chinks and delete it.
+ */
+AssemblyCode * disconnectCode(AssemblyCode * aCode)
 {
-	int sum = 0;
-	AssemblyChunk * aChunk;
-	if(aCode)
-	{
-		aChunk = aCode->first;
-		while(aChunk)
-		{
-			if (aChunk->iList)
-			{
-				sum+= aChunk->iList->numInstr;
-			}
-			aChunk = aChunk->next;
-		}
-		return sum;
-	}
-	else
-	{
-		return 0;
-	}
+    /* ensure we have a code section */
+    if (aCode)
+    {
+        /* disconnect the chunk pointers */
+        aCode->first = NULL;
+        aCode->last = NULL;
+
+        /* free the structure */
+        free(aCode);
+    }
+
+    /* complain if no code section was passed */
+    else
+        fprintf(error, "Cannot disconnect null code\n");
+
+    /* return NULL */
+    return (AssemblyCode *) NULL;
 }
 
+/**
+ * Function to count the number of instructions in a code section
+ */
+int instructionsInAssembly(AssemblyCode * aCode)
+{
+    /* initialize variables */
+	int sum = 0;
+	AssemblyChunk * aChunk = NULL;
+
+    /* ensure we have a code section */
+	if(aCode)
+	{
+        /* get the first code chunk */
+        aChunk = aCode->first;
+
+        /* iterate through the chunk list */
+		while(aChunk)
+		{
+            /* if this chunk has instructions, add their count to the sum */
+			if (aChunk->iList)
+				sum+= aChunk->iList->numInstr;
+
+			/* grab the next chunk */
+			aChunk = aChunk->next;
+		}
+	}
+
+	/* complain if no code section passed */
+	else
+    {
+        fprintf(error, "Cannot count instructions in a null code section.\n");
+        /* aChunk = aCode->first; */
+    }
+
+    /* return the sum.*/
+    return sum;
+}
+
+/**
+ * Function to append a code section to another and make a new code section from it.
+ */
 AssemblyCode * appendCode(AssemblyCode * header, AssemblyCode * body)
 {
-	int offset;
-	AssemblyCode * aCode;
-	AssemblyChunk * aChunk;
+    /* initialize variables and pointers */
+	int offset = 0;
+	AssemblyCode * aCode = NULL;
+	AssemblyChunk * aChunk = NULL;
 	Instruction * inst = NULL;
+
+    /* ensure we have both operands */
 	if (header && body)
 	{
-		
 		/* offset the body's instruction numbers */
 		offset = instructionsInAssembly(header);
 		
-		/*connect the new code structure */
+		/*connect the new code section to the operand's lists*/
 		aCode = newAssemblyCode();
 		aCode->first = header->first;
 		aCode->last = body->last;
@@ -370,163 +614,250 @@ AssemblyCode * appendCode(AssemblyCode * header, AssemblyCode * body)
 		
 		/* count up the chunks */
 		aCode->chunkCount = header->chunkCount + body->chunkCount;
-		
+
+        /* get the first chunk of the new section */
 		aChunk = body->first;
+
+        /* iterate through the chunk list */
 		while(aChunk)
 		{
+            inst = NULL;
+
+            /* get the first instruction of this chunk */
 			if (aChunk->iList)
 				inst = aChunk->iList->first;
+
+            /* apply the offset to the line numbers */
 			while(inst)
 			{
 				inst->num = inst->num + offset;
 				inst = inst->next;
-			}
+            }
+            
 			aChunk = aChunk->next;
 		}
-		
+
+
+		/* return the new Code section */
 		return aCode;
 	}
-	else
+
+	/* complain if we are missing a header */
+	else if (body)
 	{
-		fprintf(error, "Cannot append null code\n");
+        fprintf(error, "Cannot append a code section to a null code section\n");
 		return NULL;
 	}
+
+	/* complain if we are missing a body */
+    {
+        fprintf(error, "Cannot append a null code section.\n");
+        return NULL;
+    }
 }
 
-AssemblyCode * disconnectCode(AssemblyCode * aCode)
-{
-	if (aCode)
-	{
-		aCode->first = NULL;
-		aCode->last = NULL;
-		free(aCode);
-	}
-	else
-		fprintf(error, "Cannot disconnect null code\n");
-	
-	return NULL;
-}
-
+/**
+ * Function to check if a string contains only numeric characters
+ * returns 1 if it is numeric, and 0 if not.
+ */
 int isNumeric(char * str, int len)
 {
-	char * chr;
-	int i  = 0;
+    /**
+     * TODO: allow negative numbers and floats(?)
+     */
+    
+    /* initialize variables  and pointers */
+	char * chr = NULL;
+	int i = 0;
+
+    /* grab the first character */
 	chr = str;
+
+    /* iterate over each character */
 	while(chr && i < len)
 	{
+        /* if it is not a digit, return false */
 		if (!isdigit(*chr))
 			return 0;
+
+        /* move to the next character */
 		chr++;
 		i++;
 	}
-	
+
+	/* if we have reached this point, the string is entirely numeric */
 	return 1;
 }
 
+/**
+ * Function to generate expression evaluation assembly code from an AST node and scope
+ */
 AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 {
-	TreeNode * currentNode, * subNode, *arg;
-	InstructionList * iList;
+
+    /**
+     * TODO: functionalize this. it's huge. (your mom joke here)
+     */
+    
+    /* initialize variables and pointers */
+	TreeNode * currentNode = NULL, * subNode = NULL, *arg = NULL;
+	InstructionList * iList = NULL;
 	AssemblyChunk * aChunk = NULL;
 	AssemblyCode * aCode = NULL, *bCode = NULL, *cCode = NULL;
-	int op1Offset, op2Offset, scopeUps, i;
-	Scope * cScope;
-	int argNum;
-	int jumpLoc = 0;
+    Instruction * inst;
+	int op1Offset = 0, op2Offset = 0, scopeUps = 0, i = 0;
+	Scope * cScope = NULL;
+	int argNum = 0, jumpLoc = 0, index = 0;
 	char comment[128];
+    comment[0] = (char)0;
 	
-	/* if the expression exists */
-	if (expr)
+	/* ensure the expression and scope exist */
+	if (expr && scope)
 	{
-		/* switch by the type of expression */
+		/* handle terminals */
 		if (expr->terminal)
 		{
+            /* select the terminal type */
 			switch(expr->type.tType)
 			{
+
+            /* handle identifiers */
 			case id:
 			{
+                /* set up environment */
 				op1Offset = 0;
 				scopeUps = 0;
 				cScope = scope;
+
+                /* loop trace through the scopes to try to find the variable */
 				while(!op1Offset)
 				{
+                    /* look up the identifier in the symbol table */
 					op1Offset = lookupOffset(expr->tokenValue, cScope->symbols);
+
+                    /* if it's not in the current scope */
 					if (!op1Offset)
+                    {
+                        /* move up to the parent scope, if any */
 						if (cScope->parent)
 						{
 							cScope = cScope->parent;
 							scopeUps++;
 						}
+
+						/* if there is no more parent, then the symbol is not in scope */
+                        /* this should not ever happen, but complain to death if it does */
 						else
 						{
-							fprintf(error, "Symbol not found. How was this not caught?!\n");
+                            fprintf(error, "Symbol not found. How was this not caught?!\n");
 							exit(0);
 						}
-						
+                    }	
 				}
+
+				/* generate a new code section, chunk, and instruction list for this expression */
 				aCode = newAssemblyCode();
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
+                /* generate a comment for the assembly code */
 				sprintf(comment, "load variable %s", expr->tokenValue);
-				/* load the scope pointer*/
-				iList = appendInstruction( iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-											OP1, 0, FP, "set the scope pointer"));
-				if (cScope->parent)
+                
+				/* generate an instruction to load the scope pointer, and add it to the list */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                      OP1, 0, FP, "set the scope pointer");
+				iList = appendInstruction( iList, inst);
+
+                /* if the scope this identifier is at is not global */
+				if (cScope->parent) /* all non-global scopes have global as a parent */
 				{
+                    /* add an instruction for each layer of scope to be raised */
 					for(i=0; i< scopeUps; i++)
 					{
-						iList = appendInstruction( iList,
-									newInstruction(RegisterMemoryInstruction, NoneR, Load,
-												  OP1, 0, OP1, "raise scope level"));
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                              OP1, 0, OP1, "raise scope level");
+						iList = appendInstruction( iList, inst);
 					}
-				}	
+				}
+
+				/* handle global scope */
 				else
 				{
-					iList = appendInstruction( iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-												OP1, 0, GP, "set scope to global"));
+                    /* add the global scope instruction */
+                    inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                          OP1, 0, GP, "set scope to global");
+					iList = appendInstruction( iList, inst );
 				}
-				iList = appendInstruction( iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-										   RES, op1Offset, OP1, comment));
+
+                /* generate an instruction to load the identifier value into memory */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                      RES, op1Offset, OP1, comment);
+				iList = appendInstruction( iList, inst);
+
+                /* put the instruction list in the chunk */
 				aChunk->iList = iList;
+
+                /* add the chunk to the code section */
 				appendChunk(aCode, aChunk);
+
+                /* return the code section */
 				return aCode;
 				break;
 			}
+
+			/* handle literal numbers */
 			case number:
 			{
+
+                /* set up new structures */
 				aCode = newAssemblyCode();
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
+
+                /* generate a comment */
 				sprintf(comment, "load constant %s", expr->tokenValue);
-				iList = appendInstruction( iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-										   RES, atoi(expr->tokenValue), 0, comment));
+
+                /* generate an instruction to load the literal into a register */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
+                                      RES, atoi(expr->tokenValue), 0, comment);
+				iList = appendInstruction( iList, inst);
+
+                /* add the instruction to the chunk and code section */
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
+
+                /* retrn the code section */
 				return aCode;
 				break;
 			}
 			}
 		}
+
+        /* handle nonterminals */
 		else
 		{
+            /* switch by expression type */
 			switch(expr->type.rule)
 			{
+
+            /* handle expressions */
 			case expression: /* this means an assignment expression, generally */
 			{
 				/* if this is an assignment expression */
-				/* we need to generate evaluation code for the right side */
+				/* generate evaluation code for the right side */
 				aCode = evaluateExpression(expr->child[2], scope);
-			
+
+                /* set up environment */ 
 				op1Offset = 0;
 				scopeUps = 0;
 				cScope = scope;
+
+                /* find the offset and scope */
 				while(!op1Offset)
 				{
+                    /* look up the symbol at this scope */
 					op1Offset = lookupOffset(expr->child[0]->tokenValue, cScope->symbols);
+
+                    /* if not found, go up a level in scope */
 					if (!op1Offset)
 						if (cScope->parent)
 						{	
@@ -535,196 +866,221 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 						}
 						else
 						{
+                            /* handle the symbol not being found. */
+                            /* this should never happen */
 							fprintf(error, "Symbol [%s] not found. How was this not caught?!\n", expr->child[0]->tokenValue);
 							exit(0);
 						}
 				}
-				
+
+				/* create chunk and instruction list structures */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
-				/* load the scope pointer*/
-				iList = appendInstruction( iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-											OP1, 0, FP, "set the scope pointer"));
-				
+                
+				/* add instruction to load the scope pointer */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                      OP1, 0, FP, "set the scope pointer");
+				iList = appendInstruction( iList, inst);
+
+                /* add instructions to find the right scope level */
 				if (cScope->parent)
 				{
 					for(i=0; i< scopeUps; i++)
 					{
-						iList = appendInstruction( iList,
-									newInstruction(RegisterMemoryInstruction, NoneR, Load,
-													OP1, 0, OP1, "raise scope level"));
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                              OP1, 0, OP1, "raise scope level");
+						iList = appendInstruction( iList, inst);
 					}
-				}	
+				}
+
+				/* handle global scope */
 				else
 				{
-					iList = appendInstruction( iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-												OP1, 0, GP, "set scope to global"));
+                    inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                          OP1, 0, GP, "set scope to global");
+					iList = appendInstruction( iList, inst );
 				}
 				
 				/* generate the assignment code */
 				sprintf(aChunk->preamble, "* Assigning value to \'%s\'", expr->child[0]->tokenValue);
-				appendInstruction(iList, 
-					newInstruction(RegisterMemoryInstruction, NoneR, Store, 
-								   RES, op1Offset, OP1, "assign value to local variable"));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, op1Offset, OP1, "assign value to local variable");
+				appendInstruction(iList, inst);
+
+                /* add the instructions to the chunk and code section */
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
-				
+
+                /* return the new code section */
 				return aCode;	
 				break;
 			}
+
+			/* handle simple expressions */
 			case simple_expression:
-			{/* generate code for the left operand */
-			/* load the operand into memory */
-			bCode = evaluateExpression(expr->child[0], scope);
-			/* add it to this code's list */
-			if (!aCode) aCode = bCode;
-			else
 			{
-				cCode = appendCode(aCode, bCode);
-				disconnectCode(aCode);
-				disconnectCode(bCode);
-				aCode = cCode;
+                /* generate code for the left operand */
+                bCode = evaluateExpression(expr->child[0], scope);
+                
+                /* add it to this code section's list */
+                if (!aCode) aCode = bCode;
+                else
+                {
+                    cCode = appendCode(aCode, bCode);
+                    disconnectCode(aCode);
+                    disconnectCode(bCode);
+                    aCode = cCode;
+                }
+                
+                /* generate code to store the left operand in the left temporary variable */
+                aChunk = newAssemblyChunk();
+                iList = newInstructionList();
+                sprintf(comment, "Storing left operand in left temp");
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, scope->symbols->nextOffset, FP, comment);
+                iList = appendInstruction( iList, inst);
+                aChunk->iList = iList;
+                appendChunk(aCode, aChunk);
+
+                /* generate code for the right operand */
+                bCode = evaluateExpression(expr->child[2], scope);
+                
+                /* add it to this code section's list */
+                cCode = appendCode(aCode, bCode);
+                disconnectCode(aCode);
+                disconnectCode(bCode);
+                aCode = cCode;
+
+                /* generate code to store the right operand in the right temporary variable */
+                aChunk = newAssemblyChunk();
+                iList = newInstructionList();
+                sprintf(comment, "Storing right operand in right temp");
+                inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                      Store, RES, scope->symbols->nextOffset-1, FP, comment);
+                iList = appendInstruction( iList, inst);
+                aChunk->iList = iList;
+                appendChunk(aCode, aChunk);
+
+                /* generate the evaluation code section */
+                bCode = newAssemblyCode();
+                aChunk = newAssemblyChunk();
+                sprintf(aChunk->preamble, "* Evaluating \'%s\' %s \'%s\'", expr->child[0]->tokenValue,
+                        expr->child[1]->tokenValue, expr->child[2]->tokenValue);
+                iList = newInstructionList();
+
+                /* add left operand loading code */
+                sprintf(comment, "Load left operand");
+                inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                      Load, OP1, scope->symbols->nextOffset, FP, comment);
+                iList = appendInstruction(iList, inst);
+
+                /* add left operand loading code */
+                sprintf(comment, "Load right operand");
+                inst =  newInstruction(RegisterMemoryInstruction, NoneR,
+                                       Load, OP2, scope->symbols->nextOffset-1, FP, comment);
+                iList = appendInstruction(iList, inst);
+
+                /* add comparison code */
+                sprintf(comment, "calculate difference");
+                inst = newInstruction(RegisterInstruction,
+                                      Subtract, NoneRM, OP1, OP1, OP2, comment);
+                iList = appendInstruction(iList, inst);
+
+                /* add code to load null into a register for comparison */
+                sprintf(comment, "set null result");
+                inst =  newInstruction(RegisterMemoryInstruction, NoneR,
+                                       LoadConstant, RES, 0, 0, comment);
+                iList = appendInstruction(iList, inst);
+
+                /* generate code based on the type of operation */
+                switch(expr->child[1]->type.tType)
+                {
+                    /* equivalence */
+                    case equal:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpNotEqual,
+                                              OP1, 1, PC, "skip next line if ops not equal");
+                        iList = appendInstruction(iList, inst);
+                        break;
+                    }
+
+                    /* nonequivalence */
+                    case notEqual:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual,
+                                              OP1, 1, PC, "skip next line if ops equal");
+                        iList = appendInstruction(iList,inst);
+                        break;
+                    }
+
+                    /* less than or equivalence */
+                    case lessOrEqual:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterThan,
+                                              OP1, 1, PC, "skip next line if ops less than or equal");
+                        iList = appendInstruction(iList, inst);
+                        break;
+                    }
+
+                    /* greater than or equivalence */
+                    case moreOrEqual:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessThan,
+                                              OP1, 1, PC, "skip next line if ops greater than or equal");
+                        iList = appendInstruction(iList, inst);
+                        break;
+                    }
+
+                    /* less than */
+                    case less:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterEqual,
+                                              OP1, 1, PC, "skip next line if ops greater than");
+                        iList = appendInstruction(iList, inst);
+                        break;
+                    }
+
+                    /* greater than */
+                    case more:
+                    {
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessEqual,
+                                              OP1, 1, PC, "skip next line if ops less than");
+                        iList = appendInstruction(iList, inst);
+                        break;
+                    }
+                }
+
+                /* add the return true instruction */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
+                                      RES, 1, 0, "set result to true");
+                iList = appendInstruction(iList, inst);
+
+                /* add the list and chunk to the code section */
+                aChunk->iList = iList;
+                appendChunk(bCode, aChunk);
+
+                /* add the new section to the existing section */
+                if (!aCode) aCode = bCode;
+                else
+                {
+                    cCode = appendCode(aCode, bCode);
+                    disconnectCode(aCode);
+                    disconnectCode(bCode);
+                    aCode = cCode;
+                }
+
+                /* return the generated code section */
+                return aCode;
+                break;
 			}
-			/* put it in the left temporary variable */
-			aChunk = newAssemblyChunk();
-			iList = newInstructionList();
-			sprintf(comment, "Storing left operand in left temp");
-			iList = appendInstruction( iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, Store,
-										RES, scope->symbols->nextOffset, FP, comment));
-			aChunk->iList = iList;
-			appendChunk(aCode, aChunk);
-			
-			/* generate code for the right operand */
-			/* load the operand into memory */
-			bCode = evaluateExpression(expr->child[2], scope);
-			/* add it to this code's list */
-			cCode = appendCode(aCode, bCode);
-			disconnectCode(aCode);
-			disconnectCode(bCode);
-			aCode = cCode;
-			
-			/* put it in the right temporary variable */
-			aChunk = newAssemblyChunk();
-			iList = newInstructionList();
-			sprintf(comment, "Storing right operand in right temp");
-			iList = appendInstruction( iList,
-									   newInstruction(RegisterMemoryInstruction, NoneR, Store,
-													  RES, scope->symbols->nextOffset-1, FP, comment));
-			aChunk->iList = iList;
-			appendChunk(aCode, aChunk);
-			
-			/* generate the code block */
-			bCode = newAssemblyCode();
-			aChunk = newAssemblyChunk();
-			sprintf(aChunk->preamble, "* Evaluating \'%s\' %s \'%s\'", expr->child[0]->tokenValue, expr->child[1]->tokenValue, expr->child[2]->tokenValue);
-			
-			iList = newInstructionList();
-			sprintf(comment, "Load left operator");
-			iList = appendInstruction(iList, 
-						newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-										OP1, scope->symbols->nextOffset, FP, comment));
-			
-			sprintf(comment, "Load right operator");
-			iList = appendInstruction(iList, 
-						newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-										OP2, scope->symbols->nextOffset-1, FP, comment));
-			
-			sprintf(comment, "calculate difference");
-			iList = appendInstruction(iList,
-						newInstruction(RegisterInstruction, Subtract, NoneRM,
-									   OP1, OP1, OP2, comment));
-									  
-			sprintf(comment, "set null result");
-			iList = appendInstruction(iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-									   RES, 0, 0, comment));
-			
-			switch(expr->child[1]->type.tType)
-			{
-				/*RELOP OPERATIONS UP IN THIS BITCH */
-				case equal:
-				{
-					
-					iList = appendInstruction(iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, JumpNotEqual, 
-												OP1, 1, PC, "skip next line if ops not equal"));
-					break;
-				}
-				case notEqual:
-				{
-					
-					
-					iList = appendInstruction(iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual, 
-												OP1, 1, PC, "skip next line if ops equal"));
-					break;	
-				}
-				case lessOrEqual:
-				{
-					
-					iList = appendInstruction(iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterThan, 
-												OP1, 1, PC, "skip next line if ops less than or equal"));
-					break;
-				}
-				case moreOrEqual:
-				{
-					
-					iList = appendInstruction(iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, JumpLessThan, 
-												OP1, 1, PC, "skip next line if ops greater than or equal"));
-					break;
-				}
-				case less:
-				{
-					
-					iList = appendInstruction(iList,
-								newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterEqual, 
-												OP1, 1, PC, "skip next line if ops greater than"));
-					break;
-				}
-				case more:
-				{
-					
-					iList = appendInstruction(iList,
-											  newInstruction(RegisterMemoryInstruction, NoneR, JumpLessEqual, 
-															 OP1, 1, PC, "skip next line if ops less than"));
-					break;
-				}
-			}
-			
-			/* add the return true instruction */
-			iList = appendInstruction(iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-									   RES, 1, 0, "set result to true"));
-			
-			aChunk->iList = iList;
-			appendChunk(bCode, aChunk);
-			
-			/* stick it to the end of the current block */
-			if (!aCode) aCode = bCode;
-			else
-			{
-				cCode = appendCode(aCode, bCode);
-				disconnectCode(aCode);
-				disconnectCode(bCode);
-				aCode = cCode;
-			}
-			
-			return aCode;
-			
-			break;
-							
-			}
+
+			/* handle additive expressions */
 			case additive_expression:
 			{
 				/* generate code for the left operand */
-				/* load the operand into memory */
 				bCode = evaluateExpression(expr->child[0], scope);
-				/* add it to this code's list */
+                
+				/* add it to this code section's list */
 				if (!aCode) aCode = bCode;
 				else
 				{
@@ -733,18 +1089,17 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					disconnectCode(bCode);
 					aCode = cCode;
 				}
-				/* put it in the left temporary variable */
+				/* add code to store it in the left temporary variable */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
 				sprintf(comment, "Storing left operand in left temp");
-				iList = appendInstruction( iList,
-										   newInstruction(RegisterMemoryInstruction, NoneR, Store,
-														  RES, scope->symbols->nextOffset, FP, comment));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, scope->symbols->nextOffset, FP, comment);
+				iList = appendInstruction( iList, inst);
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
 				
 				/* generate code for the right operand */
-				/* load the operand into memory */
 				bCode = evaluateExpression(expr->child[2], scope);
 				/* add it to this code's list */
 				cCode = appendCode(aCode, bCode);
@@ -752,45 +1107,56 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				disconnectCode(bCode);
 				aCode = cCode;
 				
-				/* put it in the right temporary variable */
+				/* add code to store it in the right temporary variable */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
 				sprintf(comment, "Storing right operand in right temp");
-				iList = appendInstruction( iList,
-										   newInstruction(RegisterMemoryInstruction, NoneR, Store,
-														  RES, scope->symbols->nextOffset-1, FP, comment));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, scope->symbols->nextOffset-1, FP, comment);
+				iList = appendInstruction( iList, inst);
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
 				
-				/* generate the code block */
+				/* generate the evaluation code section */
 				bCode = newAssemblyCode();
 				aChunk = newAssemblyChunk();
-				sprintf(aChunk->preamble, "* Evaluating \'%s\' %s \'%s\'", expr->child[0]->tokenValue, expr->child[1]->tokenValue, expr->child[2]->tokenValue);
-				
+				sprintf(aChunk->preamble, "* Evaluating \'%s\' %s \'%s\'", expr->child[0]->tokenValue,
+                        expr->child[1]->tokenValue, expr->child[2]->tokenValue);
+
+                /* add code to load left operand */
 				iList = newInstructionList();
 				sprintf(comment, "Load left operator");
-				iList = appendInstruction(iList, 
-										  newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-														 OP1, scope->symbols->nextOffset, FP, comment));
-				
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                      OP1, scope->symbols->nextOffset, FP, comment);
+				iList = appendInstruction(iList, inst);
+
+                /* add code to load right operand */
 				sprintf(comment, "Load right operator");
-				iList = appendInstruction(iList, 
-										  newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-														 OP2, scope->symbols->nextOffset-1, FP, comment));
-				
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                      OP2, scope->symbols->nextOffset-1, FP, comment);
+				iList = appendInstruction(iList, inst);
+
+                /* handle addition operation */
 				if (expr->child[1]->type.tType == plus)
-					iList = appendInstruction(iList,
-											  newInstruction(RegisterInstruction, Add, NoneRM, 
-															 RES, OP1, OP2, "Evaluate multiplication"));
-					else
-						iList = appendInstruction(iList, 
-												  newInstruction(RegisterInstruction, Subtract, NoneRM, 
-																 RES, OP1, OP2, "Evaluate division"));
-						
-						aChunk->iList = iList;
-					appendChunk(bCode, aChunk);
+                {
+                    inst = newInstruction(RegisterInstruction, Add, NoneRM,
+                                          RES, OP1, OP2, "Evaluate addition");
+					iList = appendInstruction(iList, inst);
+                }
+
+                /* handle subtraction operation */
+				else
+                {
+                    inst =  newInstruction(RegisterInstruction, Subtract, NoneRM,
+                                           RES, OP1, OP2, "Evaluate subtraction");
+					iList = appendInstruction(iList, inst);
+                }
+
+                /* package the evaluation code into a code section */
+				aChunk->iList = iList;
+				appendChunk(bCode, aChunk);
 				
-				/* stick it to the end of the current block */
+				/* append the evaluation code to the existing code */
 				if (!aCode) aCode = bCode;
 				else
 				{
@@ -799,17 +1165,19 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					disconnectCode(bCode);
 					aCode = cCode;
 				}
-				
+
+				/* return the generated code section */
 				return aCode;
-				
 				break;
 			}
+
+			/* handle multiplicative statements */
 			case term:
 			{
 				/* generate code for the left operand */
-				/* load the operand into memory */
 				bCode = evaluateExpression(expr->child[0], scope);
-				/* add it to this code's list */
+                
+				/* add it to this code section */
 				if (!aCode) aCode = bCode;
 				else
 				{
@@ -818,64 +1186,75 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					disconnectCode(bCode);
 					aCode = cCode;
 				}
-				/* put it in the left temporary variable */
+				
+				/* generate code to store it in the left temporary variable */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
 				sprintf(comment, "Storing left operand in left temp");
-				iList = appendInstruction( iList,
-										   newInstruction(RegisterMemoryInstruction, NoneR, Store,
-														  RES, scope->symbols->nextOffset, FP, comment));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, scope->symbols->nextOffset, FP, comment);
+				iList = appendInstruction( iList, inst);
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
 				
 				/* generate code for the right operand */
-				/* load the operand into memory */
 				bCode = evaluateExpression(expr->child[2], scope);
-				/* add it to this code's list */
+                
+				/* add it to this code section */
 				cCode = appendCode(aCode, bCode);
 				disconnectCode(aCode);
 				disconnectCode(bCode);
 				aCode = cCode;
 				
-				/* put it in the right temporary variable */
+				/* generate code to store it in the right temporary variable */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
 				sprintf(comment, "Storing right operand in right temp");
-				iList = appendInstruction( iList,
-										   newInstruction(RegisterMemoryInstruction, NoneR, Store,
-														  RES, scope->symbols->nextOffset-1, FP, comment));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      RES, scope->symbols->nextOffset-1, FP, comment);
+				iList = appendInstruction( iList, inst);
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
 				
-				/* generate the code block */
+				/* generate the evaluation code section */
 				bCode = newAssemblyCode();
 				aChunk = newAssemblyChunk();
 				sprintf(aChunk->preamble, "* Evaluating \'%s\' %s \'%s\'", expr->child[0]->tokenValue, expr->child[1]->tokenValue, expr->child[2]->tokenValue);
-				
+
+                /* generate code to load the left operand */
 				iList = newInstructionList();
 				sprintf(comment, "Load left operator");
-				iList = appendInstruction(iList, 
-										  newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-														 OP1, scope->symbols->nextOffset, FP, comment));
-				
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                      OP1, scope->symbols->nextOffset, FP, comment); 
+				iList = appendInstruction(iList, inst);
+
+                /* generat code to load the right operand */
 				sprintf(comment, "Load right operator");
-				iList = appendInstruction(iList, 
-										  newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-														 OP2, scope->symbols->nextOffset-1, FP, comment));
-				
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                      OP2, scope->symbols->nextOffset-1, FP, comment);
+				iList = appendInstruction(iList, inst);
+
+                /* handle multiplication */
 				if (expr->child[1]->type.tType == multiply)
-					iList = appendInstruction(iList,
-											  newInstruction(RegisterInstruction, Multiply, NoneRM, 
-															 RES, OP1, OP2, "Evaluate multiplication"));
-					else
-						iList = appendInstruction(iList, 
-												  newInstruction(RegisterInstruction, Divide, NoneRM, 
-																 RES, OP1, OP2, "Evaluate division"));
-						
-						aChunk->iList = iList;
-					appendChunk(bCode, aChunk);
+                {
+                    inst = newInstruction(RegisterInstruction, Multiply, NoneRM,
+                                          RES, OP1, OP2, "Evaluate multiplication");
+					iList = appendInstruction(iList, inst);
+                }
+
+                /* handle division */
+				else
+                {
+                    inst = newInstruction(RegisterInstruction, Divide, NoneRM,
+                                          RES, OP1, OP2, "Evaluate division");
+					iList = appendInstruction(iList, inst);
+                }
+
+                /* add the code to the section */
+				aChunk->iList = iList;
+				appendChunk(bCode, aChunk);
 				
-				/* stick it to the end of the current block */
+				/* append the evaluation code to the existing section */
 				if (!aCode) aCode = bCode;
 				else
 				{
@@ -884,19 +1263,28 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					disconnectCode(bCode);
 					aCode = cCode;
 				}
-				
+
+				/* return the generated code section */
 				return aCode;
-				
 				break;
 			}
+
+			/* handle parenthesized expressions */
 			case factor:
 			{
+                /* generate code for the child expression */
 				aCode = evaluateExpression(expr->child[1], scope);
+
+                /* return this code */
 				return aCode;
 				break;
 			}
+
+			/* handle function calls */
 			case call:
 			{
+
+                /* set up code containers */
 				aCode = newAssemblyCode();
 				aChunk = newAssemblyChunk();
 				sprintf(aChunk->preamble, "* Call to function %s", expr->child[0]->tokenValue);
@@ -911,232 +1299,306 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				argNum = 0;
 				while(arg)
 				{
+                    /* skip commas */
 					if (arg->type.tType != comma)
 					{
-						
-						/* evaluate it */
+						/* generate code to evaluate the argument */
 						bCode = evaluateExpression(arg, scope);
 						cCode = appendCode(aCode, bCode);
 						disconnectCode(aCode);
 						disconnectCode(bCode);
 						aCode = cCode;
 						
-						/* store it */
+						/* generate code to store it */
 						aChunk = newAssemblyChunk();
 						iList = newInstructionList();
-						iList = appendInstruction(iList, 
-							newInstruction(RegisterMemoryInstruction, NoneR, Store, 
-											RES, scope->symbols->nextOffset-(4+argNum), 
-											FP, "store argument"));
-						
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, RES,
+                                              scope->symbols->nextOffset-(4+argNum), FP, "store argument");
+						iList = appendInstruction(iList, inst);
 						aChunk->iList = iList;
 						appendChunk(aCode, aChunk);
+                        
 						/* increment the argument counter */
 						argNum++;
 					}
+
+					/* move to the next argument */
 					arg = arg->sibling;
 				}
 				
-				/* store the frame location */
+				/* generate code to store the frame location */
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
-				iList = appendInstruction(iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, Store,
-										   FP, scope->symbols->nextOffset-2, FP, "push ofp"));
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                      FP, scope->symbols->nextOffset-2, FP, "push ofp");
+				iList = appendInstruction(iList, inst);
+                
 				/* move FP to frame's location: 0(FP) for new function instance */
-				iList = appendInstruction(iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress, 
-										   FP, scope->symbols->nextOffset-2, FP, "push frame")); 
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                      FP, scope->symbols->nextOffset-2, FP, "push frame");
+				iList = appendInstruction(iList, inst);
+                                           
 				/* load AC with return instruction (1(PC)) */
-				iList = appendInstruction(iList, 
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-										   AC, 1, PC, "load ac with ret ptr"));
-				/* load pc w/ function position */
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                      AC, 1, PC, "load ac with ret ptr");
+				iList = appendInstruction(iList, inst);
+                
+				/* load pc with function position */
 				/* get the jump target */
-				jumpLoc = global->symbols->lineNo[indexOfSymbol(expr->child[0]->tokenValue, global->symbols)];
-				iList = appendInstruction(iList, 
-							newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-										   PC, jumpLoc, 0, "jump to function body"));
-				
+                index = indexOfSymbol(expr->child[0]->tokenValue, global->symbols);
+				jumpLoc = global->symbols->lineNo[index];
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
+                                      PC, jumpLoc, 0, "jump to function body");
+				iList = appendInstruction(iList, inst);
 				
 				/* retrieve frame */
-				iList = appendInstruction(iList,
-							newInstruction(RegisterMemoryInstruction, NoneR, Load,
-										   FP, 0, FP, "pop frame"));
-							
+                inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                      FP, 0, FP, "pop frame");
+				iList = appendInstruction(iList, inst);
+
+                /* append the call code to the existing code */
 				aChunk->iList = iList;
 				appendChunk(aCode, aChunk);
-				
+
+                /* return the generated code */
 				return aCode;
 				break;
 			}
 			}
 		}
 	}
-	else
+
+	/* complain if the expression is null */
+	else if (scope)
 	{
 		fprintf(error,"cannot evaluate a null expression\n");
 	}
-	
+
+	/* complain if the scope is null */
+    else if (expression)
+    {
+        fprintf(error, "cannot evaluate an expression without a scope\n");
+    }
+
+    /* complain if both are null */
+    else
+    {
+        fprintf(error, "cannot evaluate a null expression with a null scope\n");
+    }
+
+	/* return a null code section if an argument was invalid */
 	return aCode;
 }
 
+/**
+ * Function to compile an Abstract Syntax tree into assembly code
+ */
 AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 {
-	TreeNode * currentNode = tree, *subNode;
+
+    /* initialize variables and pointers */
+	TreeNode * currentNode = tree, *subNode = NULL;
 	Scope * currentScope = NULL;
-	AssemblyCode * aCode, * bCode, *cCode, *body = NULL;
-	AssemblyChunk * aChunk, *bChunk;
-	InstructionList * iList;
-	int functionsCompound = 0;
-	int subScope = 0;
-	int op1Offset = 0;
-	int memOffset = 0;
-	int nextLineNo = functionOffset;
-	int lines = 0;
+	AssemblyCode * aCode = NULL, * bCode = NULL, *cCode = NULL, *body = NULL;
+	AssemblyChunk * aChunk = NULL, *bChunk = NULL;
+    Instruction * inst = NULL;
+	InstructionList * iList = NULL; 
+	int functionsCompound = 0, subScope = 0, op1Offset = 0;
+	int memOffset = 0, nextLineNo = functionOffset, lines = 0;
+    int index = 0;
 	char comment[128];
-	
+    comment[0] = 0;
+
+    /* ensure we have a valid tree and scope */
 	if (tree && scope)
 	{
+        /* handle the different types of nodes */
 		switch (tree->type.rule)
 		{
+
+            /* handle declaration lists */
 			case (declaration_list):
 			{
+                /* point at the first child */
 				currentNode = tree->child[0];
-				
+
+                /* iterate through the child nodes */
 				while(currentNode)
 				{
-					/* if this is a function declaration */
+					/* handle function declarations */
 					if (currentNode->type.rule == function_declaration)
 					{
 						/* generate the function header */
 						aChunk = newAssemblyChunk();
 						sprintf(aChunk->preamble, "* function %s", currentNode->child[1]->tokenValue);
 						iList = newInstructionList();
-						sprintf(comment, "store return for %s %d", currentNode->child[1]->tokenValue, nextLineNo);
-						iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, comment ));
-						scope->symbols->lineNo[indexOfSymbol(currentNode->child[1]->tokenValue, scope->symbols)] = nextLineNo;
+
+                        /* generate code to store return pointers */
+                        sprintf(comment, "store return for %s %d", currentNode->child[1]->tokenValue, nextLineNo);
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, comment );
+                        iList = appendInstruction(iList, inst);
+
+                        /* save the starting line number for this function in the symbol table */
+                        index = indexOfSymbol(currentNode->child[1]->tokenValue, scope->symbols);
+						scope->symbols->lineNo[index] = nextLineNo;
 						nextLineNo++;
+
+                        /* add the code to the existing code */
 						aChunk->iList = iList;
 						if (!body) 
 							body = newAssemblyCode();
 						appendChunk(body, aChunk);
 						
-						/* add the compound statement to the code */
+						/* generate code for the function body */
 						aCode = compileAST (currentNode->child[5], scope->subScopes[subScope], nextLineNo);
-						nextLineNo += instructionsInAssembly(bCode);
+
+                        /* update line number and scope trackers */
+                        if (bCode)
+                            nextLineNo += instructionsInAssembly(bCode);
 						subScope++;
-						
-						if (!body) body = aCode;
-						else
-						{
-							bCode = appendCode(body, aCode);
-							disconnectCode(body);
-							disconnectCode(aCode);
-							body = bCode;
-						}
-						
+
+                        /* add the body code to the header code */
+                        bCode = appendCode(body, aCode);
+                        disconnectCode(body);
+                        disconnectCode(aCode);
+                        body = bCode;
+
 						/* generate the function footer */
 						aChunk = newAssemblyChunk();
 						sprintf(aChunk->preamble, "* return to caller");
 						iList = newInstructionList();
-						iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller"));
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+						iList = appendInstruction(iList, inst);
 						nextLineNo++;
-					
+
+                        /* add the footer to the function code */
 						aChunk->iList = iList;
 						appendChunk(body, aChunk);
-						
+
+                        /* update the line number tracker */
 						nextLineNo = instructionsInAssembly(body) + functionOffset;
 					}
+
+                    /* handle variable declaration */
 					else
 					{
-						
+						/* coming soon! */
 					}
-					
+
+					/* move over to the next child */
 					currentNode = currentNode->sibling;
 				}
+
+				/* return this generated code */
 				return body;
 				break;
 			}
+
+			/* handle compound statements */
 			case compound_statement:
 			{
+                
+                /* get the first statement node */
 				currentNode = tree->child[2]->child[0];
+
+                /* iterate through the statements */
 				while(currentNode)
 				{
+                    /* handle different statement types */
 					switch(currentNode->type.rule)
 					{
+
+                        /* handle selection statements */
 						case selection_statement:
 						{
-						
+
+                            /* generate the evaluation header */
 							aChunk = newAssemblyChunk();
 							sprintf(aChunk->preamble, "* Selection Statement. evaluate condition");
-							
 							if (!body) body = newAssemblyCode();
 							appendChunk(body, aChunk);
-							
+
+                            /* generate evaluation code */
 							aCode = evaluateExpression(currentNode->child[2], scope);
-							
-							if (!aCode) fprintf(error, "1081\n");
-							
+
+                            /* add the evaluation code to the existing code */
 							bCode = appendCode(body, aCode);
 							disconnectCode(body);
 							disconnectCode(aCode);
 							body = bCode;
-							
+
+                            /* handle compound statements in result block */
 							if (currentNode->child[4]->type.rule == compound_statement)
 							{
+
+                                /* set up compund statement header */
 								aChunk = newAssemblyChunk();
 								sprintf(aChunk->preamble, "* pushing frame for compound statement");
 								iList = newInstructionList();
 								memOffset = scope->symbols->nextOffset-2;
-								iList = appendInstruction( iList,
-											newInstruction(RegisterMemoryInstruction, NoneR, Store,
-														   FP, memOffset, FP, "push ofp"));
-								iList = appendInstruction( iList,
-											newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-														   FP, memOffset, FP, "push frame"));
+                                inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
+                                                      FP, memOffset, FP, "push ofp");
+								iList = appendInstruction( iList, inst);
+                                inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
+                                                      FP, memOffset, FP, "push frame");
+								iList = appendInstruction( iList, inst);
 								aChunk->iList = iList;
 								appendChunk(body, aChunk);
-								
+
+                                /* generate code for the compound statement */
 								aCode = compileAST(currentNode->child[4], scope->subScopes[subScope], 0);
 								subScope++;
 							}
+
+							/* handle standalone statements */
 							else
+                            {
+                                /* I don't think this works... yet */
+                                /* generate code for the statement */
 								aCode = compileAST(currentNode, scope, 0);
-						
+                            }
+
+                            /* count up the new lines of code */
 							lines = instructionsInAssembly(aCode);
+
+                            /* add code to branch around statement body if the condition is false */
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
-							iList = appendInstruction( iList,
-										newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual,
-													   RES, lines, PC, "jump around if body if condition false"));
+                            inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual,
+                                                  RES, lines, PC, "jump around if body if condition false");
+							iList = appendInstruction( iList, inst);
 							aChunk->iList = iList;
-							
-							
 							appendChunk(body, aChunk);
-							
-							if (!aCode) fprintf(error, "1103\n");
-							
+
+                            /* add the body code */
 							bCode = appendCode(body, aCode);
 							disconnectCode(body);
 							disconnectCode(aCode);
 							body = bCode;
-							
+
+                            /* generate code to pop the frame off the stack */
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
-							iList = appendInstruction( iList,
-										newInstruction( RegisterMemoryInstruction, NoneR, Load,
-														FP, 0, FP, "pop frame"));
+                            inst = newInstruction( RegisterMemoryInstruction, NoneR, Load,
+                                                   FP, 0, FP, "pop frame");
+							iList = appendInstruction( iList, inst);
 							aChunk->iList = iList;
 							appendChunk(body, aChunk);
+
+                            /* finish with this statement */
 							break;
 						}
+
+						/* handle expression statements */
 						case expression_statement:
 						{
+                            /* get the expression node */
 							subNode = currentNode->child[0];
-							
+
+                            /* generate code to evaluate the expression */
 							aCode = evaluateExpression(subNode, scope);
-							
+
+                            /* add this code to the existing code */
 							if (!body) 
 								body = aCode;
 							else
@@ -1146,15 +1608,24 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 								disconnectCode(aCode);
 								body = bCode;
 							}
+
+							/* finish with this statement */
 							break;
 						}
+
+						/* handle return statements */
 						case return_statement:
 						{
+
+                            /* get the node for the expression to return */
 							subNode = currentNode->child[1];
+
+                            /* check if there is an expression to evaluate */
 							if (!(subNode->terminal && subNode->type.tType == endOfLine))
 							{
+
+                                /* generate code for the expression */
 								aCode = evaluateExpression(subNode, scope);
-								
 								if (!body) 
 									body = aCode;
 								else
@@ -1166,44 +1637,75 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 								}
 							}
 							
-							/* add code to return */
+							/* add code to return to the caller*/
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
-							iList = appendInstruction(iList,
-										newInstruction(RegisterMemoryInstruction, NoneR, Load,
-													   PC, -1, FP, "return to caller"));
+                            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
+                                                  PC, -1, FP, "return to caller");
+							iList = appendInstruction(iList, inst);
 						}
 					}
-					/*fprintf(error, "advancing currentNode current: %ld, sibling: %ld\n", (long)currentNode, (long)currentNode->sibling);*/
-					currentNode = currentNode->sibling;
+
+					/* advance to the next top-level node */
+                    currentNode = currentNode->sibling;
 				}
-				
+
+                /* return all of the code for this tree */
 				return body;
 				break;
 			}
+
+			/* complain for unknown node types */
+            default :
+            {
+                fprintf(error, "Invalid node encountered while parsing AST.\n");
+
+                /* print out the tree so it can be debugged */
+                printTree(currentNode, 0);
+
+                /* don't return any code for it */
+                /* this will allow the compiler to attempt to keep going */
+                return NULL;
+            }
 		}
 	}
-	else
+
+	/* complain if a null tree was passed */
+	else if (scope)
 	{
+        fprintf(error, "Cannot compile a null tree.\n");
+        return NULL;
 	}
+
+	/* complain if a null scope was passed */
+    else if (tree)
+    {
+        fprintf(error, "Cannot compile with a null scope.\n");
+        return NULL;
+    }
+
+    /* complain if both are null */
+    else
+    {
+        fprintf(error, "Cannot compile a null tree with a null scope.\n");
+        return NULL;
+    }
 }
 
+/**
+ * Main driver function.
+ */
 main(int argc, char * argv[])
 {
-    int i = 0, cont = 1;
+    /* initialize variables and pointers */
 	Prototype * proto = NULL;
 	TreeNode * dummyTN = NULL;
 	char *file;
-	
-	/* compilation vars */
-	int numInstructions = 0;
-	int NIwidth = 2;
-	AssemblyChunk * aChunk;
-	AssemblyCode * header;
-	AssemblyCode * body;
-	AssemblyCode * fullCode;
-	InstructionList * iList;
-	Instruction * inst, * inst2;
+	int numInstructions = 0, NIwidth = 2, i = 0, cont = 1;
+	AssemblyChunk * aChunk = NULL;
+	AssemblyCode * header = NULL, * body = NULL, * fullCode = NULL;
+	InstructionList * iList = NULL;
+	Instruction * inst = NULL, * inst2 = NULL, * mainInstruction = NULL;
 	
     /* if arguments are given use them as file inputs */
 	if (argc >2)
@@ -1213,15 +1715,22 @@ main(int argc, char * argv[])
 		
 		/* output file */
 		out = fopen(argv[2], "w");
-		error = stderr;
+
+        /* error file */
+        if (DEBUGMODE)
+            error = stderr;
+
+        /* if debugging is off, just throw the messages away */
+        else
+            error = fopen("/dev/null","w");
 	
-		/* if -a is specified, raise the print tree flag */
+		/* handle -a and -s flags */
+        /* TODO: refactor this to be less ugh */
 		if(argc > 3)
 			if (!strcmp("-a", argv[3]))
 				PrintTreeFlag = 1;
 			else if (!strcmp("-s", argv[3]))
 				PrintTableFlag =1;
-			
 		if(argc > 4)
 			if (!strcmp("-a", argv[4]))
 				PrintTreeFlag = 1;
@@ -1263,16 +1772,17 @@ main(int argc, char * argv[])
 		global->symbols->arraySizes[1] = 1;
 		global->symbols->numSymbols++;
 		
-		/* compile away! */
+		/* generate the AST */
 		yyparse();
 
-		/* print the tree */
-		/* printTree(AST, 0); */
+		/* print the tree, if flagged to do so */
+        if (PrintTreeFlag)
+            printTree(AST, 0);
 		
 		/* emit assembly code */
 		if (!errorEncountered)
 		{
-			/* header */
+			/* point file to the file name, moving past all directories */
 			file = argv[1];
 			cont = 1;
 			while(cont)
@@ -1285,53 +1795,68 @@ main(int argc, char * argv[])
 				else
 					cont = 0;
 			}
+			
 			/* set up header code */
 			header = newAssemblyCode();
 			
-			/* set up initialization chunk */
+			/* set up initialization code section */
 			aChunk = newAssemblyChunk();
-			sprintf(aChunk->preamble, "* C-Minus Compilation to TM Code\n* File: %s\n* Standard prelude:", file);
+			sprintf(aChunk->preamble,
+                    "* C-Minus Compilation to TM Code\n* File: %s\n* Standard prelude:", file);
 			iList = newInstructionList();
-			iList = appendInstruction(iList, 
-						newInstruction(RegisterMemoryInstruction, NoneR, Load, 
-									   GP, 0, 0, "load gp with maxaddress")); 
-			iList = appendInstruction(iList, 
-						newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress, 
-									   FP, 0, GP, "copy gp to fp")); 
-			iList = appendInstruction(iList, 
-						newInstruction(RegisterMemoryInstruction, NoneR, Store, 
-									   AC, 0, 0, "clear location 0"));
-			iList = appendInstruction(iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, Store,
-									   FP, global->symbols->nextOffset, FP, "store global pointer"));
-			iList = appendInstruction(iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-									   FP, global->symbols->nextOffset, FP, "advance to main frame"));
-			iList = appendInstruction(iList,
-						newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-									   AC, 1, PC, "load ac with ret ptr"));
-			inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant, PC, 0, 0, "jump to main");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  Load, GP, 0, 0, "load gp with maxaddress");
 			iList = appendInstruction(iList, inst);
+
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  LoadAddress, FP, 0, GP, "copy gp to fp");
+			iList = appendInstruction(iList, inst);
+
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  Store, AC, 0, 0, "clear location 0");
+			iList = appendInstruction(iList, inst);
+
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  Store, FP, global->symbols->nextOffset, FP, "store global pointer");
+			iList = appendInstruction(iList, inst);
+
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  LoadAddress, FP, global->symbols->nextOffset, FP, "advance to main frame");
+			iList = appendInstruction(iList, inst);
+
+            inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  LoadAddress, AC, 1, PC, "load ac with ret ptr");
+            iList = appendInstruction(iList, inst);
+            
+			inst = newInstruction(RegisterMemoryInstruction, NoneR,
+                                  LoadConstant, PC, 0, 0, "jump to main");
+			iList = appendInstruction(iList, inst);
+
+            /* save the location of thie main redirect */
+            mainInstruction = inst;
 			
 			/* push main to the stack list */
 			getScopeByName("main", global);
-			
-			iList = appendInstruction(iList,
-						newInstruction(RegisterInstruction, Halt, NoneRM,
-									   0, 0, 0, "End program"));
+
+            inst = newInstruction(RegisterInstruction,
+                                  Halt, NoneRM, 0, 0, 0, "End program");
+			iList = appendInstruction(iList, inst);
 			sprintf(aChunk->postamble, "* Jump around i/o routines here");
 			aChunk->iList = iList;
 			
-			/* add it to the header */
+			/* add this code to the header */
 			appendChunk(header, aChunk);
 
 			/* set up input function */
 			aChunk = newAssemblyChunk();
 			sprintf(aChunk->preamble, "* code for input routine", file);
 			iList = newInstructionList();
-			iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return")); 
-			iList = appendInstruction(iList, newInstruction(RegisterInstruction, Input, NoneRM, RES, 0, 0, "input")); 
-			iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller"));
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return");
+			iList = appendInstruction(iList, inst);
+            inst = newInstruction(RegisterInstruction, Input, NoneRM, RES, 0, 0, "input");
+			iList = appendInstruction(iList, inst);
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+			iList = appendInstruction(iList, inst);
 			aChunk->iList = iList;
 			
 			/* add it to the header */
@@ -1341,34 +1866,35 @@ main(int argc, char * argv[])
 			aChunk = newAssemblyChunk();
 			sprintf(aChunk->preamble, "* code for output routine", file);
 			iList = newInstructionList();
-			iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return")); 
-			iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Load, AC, -2, FP, "load output value"));
-			iList = appendInstruction(iList, newInstruction(RegisterInstruction, Output, NoneRM, AC, 0, 0, "output")); 
-			iList = appendInstruction(iList, newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller"));
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return");
+			iList = appendInstruction(iList, inst);
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, AC, -2, FP, "load output value");
+			iList = appendInstruction(iList, inst);
+            inst = newInstruction(RegisterInstruction, Output, NoneRM, AC, 0, 0, "output");
+			iList = appendInstruction(iList, inst);
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+			iList = appendInstruction(iList, inst);
 			sprintf(aChunk->postamble, "* End of standard prelude");
 			aChunk->iList = iList;
 			
 			/* add it to the header */
 			appendChunk(header, aChunk);
-			
+
+            /* push the global scope */
 			pushScope(global);
 			
-			/* parse the tree */
+			/* generate the program code */
 			body = compileAST(AST, global, instructionsInAssembly(header));
 			
 			/* connect header and body */
 			fullCode = appendCode(header, body);
 			
 			/* find main and update the redirect */
-			inst->o2 = global->symbols->lineNo[indexOfSymbol("main", global->symbols)];
+			mainInstruction->o2 = global->symbols->lineNo[indexOfSymbol("main", global->symbols)];
 			
-			/* output the code to a file */
+			/* output the code to the file */
 			printCode(out,fullCode);
 		}
-		/* clean up */
-		if(source != stdin) fclose(source);
-		if(out != stdout) fclose(out);
-		destroyScope(global);
 		
 	}
 	else

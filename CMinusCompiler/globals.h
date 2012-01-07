@@ -13,6 +13,8 @@
 #define MAXSUBSCOPES 32
 #define MAXCALLSTACK 16
 
+#define DEBUGMODE 1
+
 #ifndef FALSE
 #define FALSE 0
 #endif

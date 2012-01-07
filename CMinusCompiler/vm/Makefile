@@ -4,6 +4,6 @@ CFLAGS =
 tm: tm.c
 	$(CC) $(CFLAGS) tm.c -o tm
 clean:
-	-rm tm
+	-rm -f tm
 
 
