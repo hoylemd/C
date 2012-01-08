@@ -2,15 +2,16 @@ CC = g++
 
 all : cm tm
 
-full: clean y.tab.c lex.yy.c globals.h main.c TreeStuff.c
+full: clean y.tab.c lex.yy.c globals.h main.cpp TreeStuff.cpp TreeNode.cpp
 	${CC} -c y.tab.c -o y.tab.o -pedantic
 	${CC} -c lex.yy.c -o lex.yy.o -pedantic
-	${CC} -c main.c -o main.o -pedantic
-	${CC} -c TreeStuff.c -o TreeStuff.o -pedantic
-	${CC} y.tab.o lex.yy.o main.o TreeStuff.o -o cm -pedantic
+	${CC} -c main.cpp -o main.o -pedantic
+	${CC} -c TreeStuff.cpp -o TreeStuff.o -pedantic
+	${CC} -c TreeNode.cpp -o TreeNode.o -pedantic
+	${CC} y.tab.o lex.yy.o main.o TreeStuff.o TreeNode.o -o cm -pedantic
 
-cm : y.tab.c lex.yy.c globals.h main.c TreeStuff.c
-	${CC} main.c lex.yy.c y.tab.c TreeStuff.c -o cm -pedantic -g
+cm : y.tab.c lex.yy.c globals.h main.cpp TreeStuff.cpp TreeNode.cpp
+	${CC} main.cpp lex.yy.c y.tab.c TreeStuff.cpp TreeNode.cpp -o cm -pedantic -g
 
 tm :
 	cd vm && $(MAKE)
@@ -28,7 +29,7 @@ clean :
 	cd cminusCode && rm -f *~
 
 tidy :
-	rm -f cminus.tab.c cminus.tab.h
+	rm -f cminus.tab.c cminus.tab.h *.0
 	
 test : clean cm tm tidy
 	./cm cminusCode/1.cm output.tm

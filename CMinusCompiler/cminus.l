@@ -1,6 +1,6 @@
 %{
 	#include <stdio.h>
-	#include "globals.h"
+	#include "common.h"
 	#include "y.tab.h"
 
 	/* parsing data fields */

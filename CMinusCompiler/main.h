@@ -3,7 +3,8 @@
  */
 
 #include <stdio.h>
-#include "globals.h"
+#include <sstream>
+#include "common.h"
 
 /* define register shorthands */
 #define AC 0
@@ -95,11 +96,11 @@ typedef struct instr
 	int num;
 
     /* label/comment */
-	char label[LABELSIZE];
+	string * label;
 } Instruction;
 
 /* prototype for Instruction Constructor */
-Instruction * newInstruction(InstructionType, rOpCode, rmOpCode, int, int, int, char *);
+Instruction * newInstruction(InstructionType, rOpCode, rmOpCode, int, int, int, string *);
 
 /* Instruction List structure */
 typedef struct instrList
@@ -116,13 +117,13 @@ typedef struct instrList
 typedef struct assemblyChunk
 {
     /* preamble comment */
-	char preamble[256];
+	string * preamble;
 
     /* list of instructions */
 	InstructionList * iList;
 
     /* postamble comment */
-	char postamble[256];
+	string * postamble;
 
     /* list pointers */
 	struct assemblyChunk * next;
