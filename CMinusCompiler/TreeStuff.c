@@ -636,8 +636,6 @@ int lookupOffset(char * sym, SymbolTable * table)
 	}
 
 	/* return 0 on failure */
-    /* TODO: maybe this shuld be -1 to differentiate between failure
-       and no offset */
 	return 0;
 }
 

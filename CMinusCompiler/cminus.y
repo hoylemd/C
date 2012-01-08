@@ -106,9 +106,6 @@
      */
 	void checkSymbol(TreeNode * typeSpec, char * iden, Scope * scope, Prototype * proto, int size)
 	{
-        /* initialize variables */
-		int i = 0;
-
 		/* check for redefinition*/
 		if (matchSymbol(iden, currentScope))
 		{
@@ -117,9 +114,6 @@
 
             /* set the flag */
 			errorEncountered = 1;
-
-            /* TODO: why is this here? */
-			i = scope->symbols->numSymbols;
 		}
 
         /* if the symbol is not defined, add it */
@@ -167,9 +161,8 @@
 			return getIdentifierType(iden, scope->parent);
 		}
 
-        /* TODO: this should throw an error */
-		/* if nothing's found, call it a void */
-		return voidType;
+        /* if nothing found, return errorType */
+		return errorType;
 	}
 	
 	/**
@@ -277,11 +270,18 @@
 		int i = 0;
 		TreeNode * currentArg = NULL;
 		VarKind currentParam = voidType;
-		
-		/* if no call was given we've already reported the error. TODO:(why?) */
-		if (!call)
-			return 0;
-		
+
+        /* complain if no call was provided */
+        if (!call)
+        {
+            /* print error message */
+            fprintf(error, "Cannot check arguments for no function.\n");
+
+            /* raise error flag and return 0 */
+            errorEncountered = 1;
+            return 0;
+        }
+
 		/* handle case where no arguments given */
 		if(!arguments)
 		{
@@ -296,7 +296,7 @@
 				fprintf(error, "No arguments specified for function %s on line %d Expected: %d\n",
 						call->name, lineno, call->numParams);
 
-                /* raide error flag and return */
+                /* raise error flag and return */
 				errorEncountered = 1;
 				return 0;
 			}

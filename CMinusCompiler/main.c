@@ -23,20 +23,6 @@ Scope * popScope()
 }
 
 /**
- * Function to get a numbered scope
- */
-Scope * getScope(int i)
-{
-    /**
-     * Todo: Check if and how this is used
-     */
-	if(i < scopeCount)
-		return scopeStack[scopeCount - i];
-	else
-		return NULL;
-}
-
-/**
  * Function to get the string command for a register operation opcode
  */
 char * ROpCodeString(rOpCode r)
@@ -180,9 +166,6 @@ Instruction * destroyInstruction(Instruction * i)
  */
 void printInstruction(FILE * target, Instruction * inst)
 {
-    /**
-     * TODO: handle codes of > 999 instructions.
-     */
     
     /* initialize variables */
 	int spaces = 0, i = 0;
@@ -310,11 +293,6 @@ InstructionList * appendInstruction(InstructionList * list, Instruction * i)
  */
 InstructionList * insertInstruction(InstructionList * list, Instruction * inst, int pos)
 {
-
-    /**
-     * TODO: handle negative seek that goes to head.
-     */
-    
     /* initalize variables */
 	Instruction * currentI = NULL;
 	int i = 0;
@@ -341,8 +319,8 @@ InstructionList * insertInstruction(InstructionList * list, Instruction * inst, 
 					currentI = currentI->next;
 			}
 
-			/* insert the instruction, handling pos 0 case */
-			if(pos != 0)
+			/* insert the instruction, handling case of insert at the head case */
+			if(currentI != list->first)
 			{
 				currentI->prev->next = inst;
 				inst->prev = currentI->prev;
@@ -661,11 +639,7 @@ AssemblyCode * appendCode(AssemblyCode * header, AssemblyCode * body)
  * returns 1 if it is numeric, and 0 if not.
  */
 int isNumeric(char * str, int len)
-{
-    /**
-     * TODO: allow negative numbers and floats(?)
-     */
-    
+{ 
     /* initialize variables  and pointers */
 	char * chr = NULL;
 	int i = 0;
@@ -673,6 +647,14 @@ int isNumeric(char * str, int len)
     /* grab the first character */
 	chr = str;
 
+    /* if the firct character is a - sign */
+    if (*chr == '-')
+    {
+        /* advance on,*/
+        chr++;
+        i++;
+    }
+    
     /* iterate over each character */
 	while(chr && i < len)
 	{
@@ -1751,7 +1733,7 @@ main(int argc, char * argv[])
 	AssemblyCode * header = NULL, * body = NULL, * fullCode = NULL;
 	InstructionList * iList = NULL;
 	Instruction * inst = NULL, * inst2 = NULL, * mainInstruction = NULL;
-	
+    
     /* if arguments are given use them as file inputs */
 	if (argc >2)
 	{
@@ -1807,7 +1789,6 @@ main(int argc, char * argv[])
 		strncpy(proto->name, "output", 7);
 		proto->type = voidType;
 		proto->params[0] = intType;
-		proto->array[0] = 1;
 		proto->numParams = 1;
 		
 		strncpy(global->symbols->identifiers[1], "output", 7);

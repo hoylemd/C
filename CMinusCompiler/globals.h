@@ -33,7 +33,7 @@ extern int lineno;
 
 /* enumeration for variable types */
 typedef enum {
-	intType, voidType
+	intType, voidType, errorType
 } VarKind;
 
 /* enumeration for rule node types */
@@ -147,9 +147,6 @@ typedef struct funProto
     /* parameter types */
     VarKind params[MAXCHILDREN];
     int numParams;
-
-    /* TODO: what's this for? */
-	int array[MAXCHILDREN];
 
 } Prototype;
 
