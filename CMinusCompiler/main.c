@@ -34,29 +34,29 @@ char * ROpCodeString(rOpCode r)
 		switch (r)
 		{
 			case Halt:
-				return "   HALT";
+				return (char *)"   HALT";
 			case Input:
-				return "     IN";
+				return (char *) "     IN";
 			case Output:
-				return "    OUT";
+				return (char *) "    OUT";
 			case Add:
-				return "    ADD";
+				return (char *) "    ADD";
 			case Subtract:
-				return "    SUB";
+				return (char *) "    SUB";
 			case Multiply:
-				return "    MUL";
+				return (char *) "    MUL";
 			case Divide:
-				return "    DIV";
+				return (char *) "    DIV";
 
             /* return nothing on unrecognized opcode */
 			default:
-				return "";
+				return (char *) "";
 		}
 	}
 
 	/* return nothing if no opcode given */
 	else
-		return "";
+		return (char *) "";
 }
 
 /**
@@ -72,35 +72,35 @@ char * RmOpCodeString(rmOpCode rm)
 		switch (rm)
 		{
 			case Load:
-				return "     LD";
+				return (char *) "     LD";
 			case LoadAddress:
-				return "    LDA";
+				return (char *) "    LDA";
 			case LoadConstant:
-				return "    LDC";
+				return (char *) "    LDC";
 			case Store:
-				return "     ST";
+				return (char *) "     ST";
 			case JumpLessThan:
-				return "    JLT";
+				return (char *) "    JLT";
 			case JumpLessEqual:
-				return "    JLE";
+				return (char *) "    JLE";
 			case JumpGreaterThan:
-				return "    JGT";
+				return (char *) "    JGT";
 			case JumpGreaterEqual:
-				return "    JGE";
+				return (char *) "    JGE";
 			case JumpEqual:
-				return "    JEQ";
+				return (char *) "    JEQ";
 			case JumpNotEqual:
-				return "    JNE";
+				return (char *) "    JNE";
 
              /* return nothing on unrecognized opcode */
 			default:
-				return "";
+				return (char *) "";
 		}
 	}
 
 	/* return nothing if no opcode given */
 	else
-		return "";
+		return (char *) "";
 }
 
 /**
@@ -110,7 +110,7 @@ Instruction * newInstruction(InstructionType type, rOpCode rCode, rmOpCode rmCod
                              char * label)
 {
     /* allocate memory for the struct */
-	Instruction * nInst = malloc(sizeof(Instruction));
+	Instruction * nInst = (Instruction *) malloc(sizeof(Instruction));
 
     /* get the opcode */
 	nInst->type = type;
@@ -184,9 +184,9 @@ void printInstruction(FILE * target, Instruction * inst)
 
         /* call the appropriate print routine */
 		if (inst->type == RegisterMemoryInstruction)
-			fprintf(target, "%d:%s  %d,%d(%d) \t%s\n", inst->num, RmOpCodeString(inst->oc.rCode), inst->o1, inst->o2, inst->o3, inst->label);
+			fprintf(target, "%d:%s  %d,%d(%d) \t%s\n", inst->num, RmOpCodeString(inst->oc.rmCode), inst->o1, inst->o2, inst->o3, inst->label);
 		else
-			fprintf(target, "%d:%s  %d,%d,%d \t%s\n", inst->num, ROpCodeString(inst->oc.rmCode), inst->o1, inst->o2, inst->o3, inst->label);
+			fprintf(target, "%d:%s  %d,%d,%d \t%s\n", inst->num, ROpCodeString(inst->oc.rCode), inst->o1, inst->o2, inst->o3, inst->label);
 	}
 	else
 	{
@@ -201,7 +201,7 @@ void printInstruction(FILE * target, Instruction * inst)
 InstructionList * newInstructionList()
 {
     /* Allocate memory */
-	InstructionList * iList = malloc(sizeof(InstructionList));
+	InstructionList * iList = (InstructionList *)malloc(sizeof(InstructionList));
 
     /* initialize fields */
 	iList->numInstr = 0;
@@ -491,7 +491,7 @@ void printCode(FILE * target, AssemblyCode * aCode)
 AssemblyCode * newAssemblyCode()
 {
     /* allocate memory */
-	AssemblyCode * aCode = malloc(sizeof(AssemblyCode));
+	AssemblyCode * aCode = (AssemblyCode *) malloc(sizeof(AssemblyCode));
 
     /* initialize members */
 	aCode->chunkCount = 0;
@@ -746,7 +746,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 
 				/* generate an instruction to load the scope pointer, and add it to the list */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                      OP1, 0, FP, "set the scope pointer");
+                                      OP1, 0, FP, (char *) "set the scope pointer");
 				iList = appendInstruction( iList, inst);
 
                 /* if the scope this identifier is at is not global */
@@ -756,7 +756,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					for(i=0; i< scopeUps; i++)
 					{
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
-                                              OP1, 0, OP1, "raise scope level");
+                                              OP1, 0, OP1, (char *) "raise scope level");
 						iList = appendInstruction( iList, inst);
 					}
 				}
@@ -766,7 +766,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				{
                     /* add the global scope instruction */
                     inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                          OP1, 0, GP, "set scope to global");
+                                          OP1, 0, GP, (char *) "set scope to global");
 					iList = appendInstruction( iList, inst );
 				}
 
@@ -861,7 +861,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 
 				/* add instruction to load the scope pointer */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                      OP1, 0, FP, "set the scope pointer");
+                                      OP1, 0, FP, (char *) "set the scope pointer");
 				iList = appendInstruction( iList, inst);
 
                 /* add instructions to find the right scope level */
@@ -870,7 +870,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 					for(i=0; i< scopeUps; i++)
 					{
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
-                                              OP1, 0, OP1, "raise scope level");
+                                              OP1, 0, OP1, (char *) "raise scope level");
 						iList = appendInstruction( iList, inst);
 					}
 				}
@@ -879,14 +879,14 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
 				{
                     inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                          OP1, 0, GP, "set scope to global");
+                                          OP1, 0, GP, (char *) "set scope to global");
 					iList = appendInstruction( iList, inst );
 				}
 				
 				/* generate the assignment code */
 				sprintf(aChunk->preamble, "* Assigning value to \'%s\'", expr->child[0]->tokenValue);
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
-                                      RES, op1Offset, OP1, "assign value to local variable");
+                                      RES, op1Offset, OP1, (char *) "assign value to local variable");
 				appendInstruction(iList, inst);
 
                 /* add the instructions to the chunk and code section */
@@ -981,7 +981,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case equal:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpNotEqual,
-                                              OP1, 1, PC, "skip next line if ops not equal");
+                                              OP1, 1, PC, (char *) "skip next line if ops not equal");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -990,7 +990,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case notEqual:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual,
-                                              OP1, 1, PC, "skip next line if ops equal");
+                                              OP1, 1, PC, (char *) "skip next line if ops equal");
                         iList = appendInstruction(iList,inst);
                         break;
                     }
@@ -999,7 +999,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case lessOrEqual:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterThan,
-                                              OP1, 1, PC, "skip next line if ops greater than");
+                                              OP1, 1, PC, (char *) "skip next line if ops greater than");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1008,7 +1008,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case moreOrEqual:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessThan,
-                                              OP1, 1, PC, "skip next line if ops less than");
+                                              OP1, 1, PC, (char *) "skip next line if ops less than");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1017,7 +1017,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case less:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpGreaterEqual,
-                                              OP1, 1, PC, "skip next line if ops greater than or equal");
+                                              OP1, 1, PC, (char *) "skip next line if ops greater than or equal");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1026,7 +1026,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                     case more:
                     {
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpLessEqual,
-                                              OP1, 1, PC, "skip next line if ops less than or equal");
+                                              OP1, 1, PC, (char *) "skip next line if ops less than or equal");
                         iList = appendInstruction(iList, inst);
                         break;
                     }
@@ -1034,7 +1034,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 
                 /* add the return true instruction */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-                                      RES, 1, 0, "set result to true");
+                                      RES, 1, 0, (char *) "set result to true");
                 iList = appendInstruction(iList, inst);
 
                 /* add the list and chunk to the code section */
@@ -1122,7 +1122,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				if (expr->child[1]->type.tType == plus)
                 {
                     inst = newInstruction(RegisterInstruction, Add, NoneRM,
-                                          RES, OP1, OP2, "Evaluate addition");
+                                          RES, OP1, OP2, (char *) "Evaluate addition");
 					iList = appendInstruction(iList, inst);
                 }
 
@@ -1130,7 +1130,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
                 {
                     inst =  newInstruction(RegisterInstruction, Subtract, NoneRM,
-                                           RES, OP1, OP2, "Evaluate subtraction");
+                                           RES, OP1, OP2, (char *) "Evaluate subtraction");
 					iList = appendInstruction(iList, inst);
                 }
 
@@ -1220,7 +1220,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				if (expr->child[1]->type.tType == multiply)
                 {
                     inst = newInstruction(RegisterInstruction, Multiply, NoneRM,
-                                          RES, OP1, OP2, "Evaluate multiplication");
+                                          RES, OP1, OP2, (char *) "Evaluate multiplication");
 					iList = appendInstruction(iList, inst);
                 }
 
@@ -1228,7 +1228,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				else
                 {
                     inst = newInstruction(RegisterInstruction, Divide, NoneRM,
-                                          RES, OP1, OP2, "Evaluate division");
+                                          RES, OP1, OP2, (char *) "Evaluate division");
 					iList = appendInstruction(iList, inst);
                 }
 
@@ -1295,7 +1295,7 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 						aChunk = newAssemblyChunk();
 						iList = newInstructionList();
                         inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, RES,
-                                              scope->symbols->nextOffset-(4+argNum), FP, "store argument");
+                                              scope->symbols->nextOffset-(4+argNum), FP, (char *) "store argument");
 						iList = appendInstruction(iList, inst);
 						aChunk->iList = iList;
 						appendChunk(aCode, aChunk);
@@ -1312,17 +1312,17 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
 				aChunk = newAssemblyChunk();
 				iList = newInstructionList();
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
-                                      FP, scope->symbols->nextOffset-2, FP, "push ofp");
+                                      FP, scope->symbols->nextOffset-2, FP, (char *) "push ofp");
 				iList = appendInstruction(iList, inst);
                 
 				/* move FP to frame's location: 0(FP) for new function instance */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                      FP, scope->symbols->nextOffset-2, FP, "push frame");
+                                      FP, scope->symbols->nextOffset-2, FP, (char *) "push frame");
 				iList = appendInstruction(iList, inst);
                                            
 				/* load AC with return instruction (1(PC)) */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                      AC, 1, PC, "load ac with ret ptr");
+                                      AC, 1, PC, (char *) "load ac with ret ptr");
 				iList = appendInstruction(iList, inst);
                 
 				/* load pc with function position */
@@ -1330,12 +1330,12 @@ AssemblyCode * evaluateExpression(TreeNode * expr, Scope * scope)
                 index = indexOfSymbol(expr->child[0]->tokenValue, global->symbols);
 				jumpLoc = global->symbols->lineNo[index];
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadConstant,
-                                      PC, jumpLoc, 0, "jump to function body");
+                                      PC, jumpLoc, 0, (char *) "jump to function body");
 				iList = appendInstruction(iList, inst);
 				
 				/* retrieve frame */
                 inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
-                                      FP, 0, FP, "pop frame");
+                                      FP, 0, FP, (char *) "pop frame");
 				iList = appendInstruction(iList, inst);
 
                 /* append the call code to the existing code */
@@ -1449,7 +1449,7 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 						aChunk = newAssemblyChunk();
 						sprintf(aChunk->preamble, "* return to caller");
 						iList = newInstructionList();
-                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+                        inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, (char *) "return to caller");
 						iList = appendInstruction(iList, inst);
 						nextLineNo++;
 
@@ -1522,10 +1522,10 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 								iList = newInstructionList();
 								memOffset = scope->symbols->nextOffset-2;
                                 inst = newInstruction(RegisterMemoryInstruction, NoneR, Store,
-                                                      FP, memOffset, FP, "push ofp");
+                                                      FP, memOffset, FP, (char *) "push ofp");
 								iList = appendInstruction( iList, inst);
                                 inst = newInstruction(RegisterMemoryInstruction, NoneR, LoadAddress,
-                                                      FP, memOffset, FP, "push frame");
+                                                      FP, memOffset, FP, (char *) "push frame");
 								iList = appendInstruction( iList, inst);
 								aChunk->iList = iList;
 								appendChunk(body, aChunk);
@@ -1550,7 +1550,7 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
                             inst = newInstruction(RegisterMemoryInstruction, NoneR, JumpEqual,
-                                                  RES, lines, PC, "jump around if body if condition false");
+                                                  RES, lines, PC, (char *) "jump around if body if condition false");
 							iList = appendInstruction( iList, inst);
 							aChunk->iList = iList;
 							appendChunk(body, aChunk);
@@ -1565,7 +1565,7 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 							aChunk = newAssemblyChunk();
 							iList = newInstructionList();
                             inst = newInstruction( RegisterMemoryInstruction, NoneR, Load,
-                                                   FP, 0, FP, "pop frame");
+                                                   FP, 0, FP, (char *) "pop frame");
 							iList = appendInstruction( iList, inst);
 							aChunk->iList = iList;
 							appendChunk(body, aChunk);
@@ -1644,13 +1644,13 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
                             for (i = 0; i < scope->returnScopes; i++)
                             {
                                 inst = newInstruction( RegisterMemoryInstruction, NoneR, Load,
-                                                       FP, 0, FP, "pop frame");
+                                                       FP, 0, FP, (char *) "pop frame");
                                 iList = appendInstruction(iList, inst);
                             }
                             
                             /* add code to return to the caller*/
                             inst = newInstruction(RegisterMemoryInstruction, NoneR, Load,
-                                                  PC, -1, FP, "return to caller");
+                                                  PC, -1, FP, (char *) "return to caller");
 							iList = appendInstruction(iList, inst);
                             aChunk->iList = iList;
                             appendChunk(aCode, aChunk);
@@ -1722,7 +1722,7 @@ AssemblyCode * compileAST(TreeNode * tree, Scope * scope, int functionOffset)
 /**
  * Main driver function.
  */
-main(int argc, char * argv[])
+int main(int argc, char * argv[])
 {
     /* initialize variables and pointers */
 	Prototype * proto = NULL;
@@ -1765,14 +1765,14 @@ main(int argc, char * argv[])
 				PrintTableFlag =1;
 	
 		/* set up the global scope */
-		global = newScope("global", NULL);
+		global = newScope((char *) "global", NULL);
 		
 		/* switch to global scope */
 		currentScope = global;
 		
 		/* add the symbols for input and output */
 		/*input */
-		proto = malloc(sizeof(Prototype));
+		proto = (Prototype *) malloc(sizeof(Prototype));
 		strncpy(proto->name, "input", 6);
 		proto->type = intType;
 		proto->numParams = 0;
@@ -1785,7 +1785,7 @@ main(int argc, char * argv[])
 		global->symbols->numSymbols++;
 		
 		/* output*/
-		proto = malloc(sizeof(Prototype));
+		proto = (Prototype *) malloc(sizeof(Prototype));
 		strncpy(proto->name, "output", 7);
 		proto->type = voidType;
 		proto->params[0] = intType;
@@ -1827,41 +1827,41 @@ main(int argc, char * argv[])
                     "* C-Minus Compilation to TM Code\n* File: %s\n* Standard prelude:", file);
 			iList = newInstructionList();
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  Load, GP, 0, 0, "load gp with maxaddress");
+                                  Load, GP, 0, 0, (char *) "load gp with maxaddress");
 			iList = appendInstruction(iList, inst);
 
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  LoadAddress, FP, 0, GP, "copy gp to fp");
+                                  LoadAddress, FP, 0, GP, (char *) "copy gp to fp");
 			iList = appendInstruction(iList, inst);
 
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  Store, AC, 0, 0, "clear location 0");
+                                  Store, AC, 0, 0, (char *) "clear location 0");
 			iList = appendInstruction(iList, inst);
 
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  Store, FP, global->symbols->nextOffset, FP, "store global pointer");
+                                  Store, FP, global->symbols->nextOffset, FP, (char *) "store global pointer");
 			iList = appendInstruction(iList, inst);
 
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  LoadAddress, FP, global->symbols->nextOffset, FP, "advance to main frame");
+                                  LoadAddress, FP, global->symbols->nextOffset, FP, (char *) "advance to main frame");
 			iList = appendInstruction(iList, inst);
 
             inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  LoadAddress, AC, 1, PC, "load ac with ret ptr");
+                                  LoadAddress, AC, 1, PC, (char *) "load ac with ret ptr");
             iList = appendInstruction(iList, inst);
             
 			inst = newInstruction(RegisterMemoryInstruction, NoneR,
-                                  LoadConstant, PC, 0, 0, "jump to main");
+                                  LoadConstant, PC, 0, 0, (char *) "jump to main");
 			iList = appendInstruction(iList, inst);
 
             /* save the location of thie main redirect */
             mainInstruction = inst;
 			
 			/* push main to the stack list */
-			getScopeByName("main", global);
+            getScopeByName((char *) "main", global);
 
             inst = newInstruction(RegisterInstruction,
-                                  Halt, NoneRM, 0, 0, 0, "End program");
+                                  Halt, NoneRM, 0, 0, 0, (char *) "End program");
 			iList = appendInstruction(iList, inst);
 			sprintf(aChunk->postamble, "* Jump around i/o routines here");
 			aChunk->iList = iList;
@@ -1873,11 +1873,11 @@ main(int argc, char * argv[])
 			aChunk = newAssemblyChunk();
 			sprintf(aChunk->preamble, "* code for input routine", file);
 			iList = newInstructionList();
-            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, (char *) "store return");
 			iList = appendInstruction(iList, inst);
-            inst = newInstruction(RegisterInstruction, Input, NoneRM, RES, 0, 0, "input");
+            inst = newInstruction(RegisterInstruction, Input, NoneRM, RES, 0, 0, (char *) "input");
 			iList = appendInstruction(iList, inst);
-            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, (char *) "return to caller");
 			iList = appendInstruction(iList, inst);
 			aChunk->iList = iList;
 			
@@ -1888,13 +1888,13 @@ main(int argc, char * argv[])
 			aChunk = newAssemblyChunk();
 			sprintf(aChunk->preamble, "* code for output routine", file);
 			iList = newInstructionList();
-            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, "store return");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Store, AC, -1, FP, (char *) "store return");
 			iList = appendInstruction(iList, inst);
-            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, AC, -2, FP, "load output value");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, AC, -2, FP, (char *) "load output value");
 			iList = appendInstruction(iList, inst);
-            inst = newInstruction(RegisterInstruction, Output, NoneRM, AC, 0, 0, "output");
+            inst = newInstruction(RegisterInstruction, Output, NoneRM, AC, 0, 0, (char *) "output");
 			iList = appendInstruction(iList, inst);
-            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, "return to caller");
+            inst = newInstruction(RegisterMemoryInstruction, NoneR, Load, PC, -1, FP, (char *) "return to caller");
 			iList = appendInstruction(iList, inst);
 			sprintf(aChunk->postamble, "* End of standard prelude");
 			aChunk->iList = iList;
@@ -1912,7 +1912,7 @@ main(int argc, char * argv[])
 			fullCode = appendCode(header, body);
 			
 			/* find main and update the redirect */
-			mainInstruction->o2 = global->symbols->lineNo[indexOfSymbol("main", global->symbols)];
+            mainInstruction->o2 = global->symbols->lineNo[indexOfSymbol((char *) "main", global->symbols)];
 			
 			/* output the code to the file */
 			printCode(out,fullCode);

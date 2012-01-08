@@ -399,7 +399,7 @@ char * copyString(char * s)
 	n = strlen(s)+1;
 	
 	/* allocate the string */
-	t = malloc(n);
+	t = (char *)malloc(n);
 	
 	/* if successful, copy the string and send it back */
 	if (t) strncpy(t,s,n);

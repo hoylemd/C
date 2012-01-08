@@ -12,7 +12,7 @@
 	#define YYSTYPE nodeOrString
 
     /* set yacc's debug flag to off */
-	int yydebug=0;
+	//static int yydebug=0;
 
 	/* Scanner tracking externs */
 	extern char tokenString[50];
@@ -23,8 +23,8 @@
 	extern FILE * error;
 
 	/* flag to control whether or not to output the tree/symbol table */
-	extern PrintTreeFlag;
-	extern PrintTableFlag;
+	extern int PrintTreeFlag;
+	extern int PrintTableFlag;
 	
 	/* AST handle */
 	TreeNode * AST;
@@ -66,13 +66,6 @@
 		return 0;
 	}
 
-	/**
-     * wrap routine. Just exit on EOF
-     */
-	int yywrap()
-	{
-		return 1;
-	}
 
 	/**
      * Driver routine

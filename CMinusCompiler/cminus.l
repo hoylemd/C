@@ -12,6 +12,16 @@
 	extern FILE * out;
 	extern FILE * error;
 
+    /**
+     * wrap routine. Just exit on EOF
+     * extern "C" stuff is so that it'll link properly
+     */
+    extern "C" {
+        int yywrap()
+        {
+            return 1;
+        }
+    }
 %}
 
 /* macros */

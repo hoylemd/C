@@ -1,14 +1,16 @@
+CC = g++
+
 all : cm tm
 
 full: clean y.tab.c lex.yy.c globals.h main.c TreeStuff.c
-	gcc -c y.tab.c -o y.tab.o -pedantic
-	gcc -c lex.yy.c -o lex.yy.o -pedantic
-	gcc -c main.c -o main.o -pedantic
-	gcc -c TreeStuff.c -o TreeStuff.o -pedantic
-	gcc y.tab.o lex.yy.o main.o TreeStuff.o -o cm -pedantic
+	${CC} -c y.tab.c -o y.tab.o -pedantic
+	${CC} -c lex.yy.c -o lex.yy.o -pedantic
+	${CC} -c main.c -o main.o -pedantic
+	${CC} -c TreeStuff.c -o TreeStuff.o -pedantic
+	${CC} y.tab.o lex.yy.o main.o TreeStuff.o -o cm -pedantic
 
 cm : y.tab.c lex.yy.c globals.h main.c TreeStuff.c
-	gcc main.c lex.yy.c y.tab.c TreeStuff.c -o cm -pedantic -g
+	${CC} main.c lex.yy.c y.tab.c TreeStuff.c -o cm -pedantic -g
 
 tm :
 	cd vm && $(MAKE)

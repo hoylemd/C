@@ -139,3 +139,6 @@ typedef struct assemblyCode
     /* counter for chunks */
 	int chunkCount;
 } AssemblyCode;
+
+/* prototype for functions */
+int instructionsInAssembly(AssemblyCode *);
