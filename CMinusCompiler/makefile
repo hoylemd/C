@@ -24,7 +24,7 @@ y.tab.c : cminus.y
 	yacc -d --verbose --debug cminus.y
 	
 clean : 
-	rm -f lex.yy.c y.tab.c y.tab.h *~ *.o cm y.output out*.txt output.tm tm valgrind-results.txt
+	rm -f lex.yy.c y.tab.c y.tab.h *~ *.o cm cminus.output out*.txt output.tm tm valgrind-results.txt
 	cd vm && $(MAKE) clean
 	cd cminusCode && rm -f *~
 
