@@ -5,30 +5,13 @@
 %{
     /* includes */
     #include "common.h"
-    #include <stdio.h>
 
     /* definitions */
     #define DEBUG 0
     #define YYSTYPE nodeOrString
+    #define MAXCALLSTACK 16
 
-    /* Scanner tracking externs */
-    extern char tokenString[50];
-    extern int lineno;
-
-    /* Output streams */
-    extern FILE * out;
-    extern FILE * error;
-
-    /* flag to control whether or not to output the tree/symbol table */
-    extern int PrintTreeFlag;
-    extern int PrintTableFlag;
-    
-    /* AST handle */
-    TreeNode * AST;
-    
-    /* Scope Pointers */
-    Scope * global = NULL;
-    Scope * currentScope = NULL;
+    /* prototype pointer */
     Prototype * currentPrototype = NULL;
     
     /* call stack */
@@ -39,9 +22,6 @@
     /* flags for function scope reminders */
     int funScope = 0;
     int funScopeRemember = 0;
-
-    /* error flag */
-    int errorEncountered = 0;
     
     /* Yacc grammar type */
     typedef union{

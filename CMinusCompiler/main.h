@@ -2,26 +2,18 @@
  * Header file for the giant main code file
  */
 
-#include <stdio.h>
-#include <sstream>
-#include "common.h"
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
-/* define register shorthands */
-#define AC 0
-#define AC1 1
-#define OP1 2
-#define OP2 3
-#define RES 4
-#define PC 7
-#define GP 6
-#define FP 5
-#define LABELSIZE 128
+#include "assemble.h"
+
+#define DEBUGMODE 1
 
 /* declaration of parsing fields */
-char tokenString[50];
+char tokenString[MAXTOKENLEN];
 int lineno = 0;
 
-/* declaration of io streams */
+/* io streams */
 FILE * source = NULL;
 FILE * out = NULL;
 FILE * error = NULL;
@@ -30,116 +22,22 @@ FILE * error = NULL;
 int PrintTreeFlag = 0;
 int PrintTableFlag = 0;
 
-/* pointer to the parse function */
-extern void yyparse();
-
 /* pointers to the scope variables */
-extern Scope * global;
-extern Scope * currentScope;
 Scope * scopeStack[64];
 int scopeCount = 0;
 
+/* global scopes */
+Scope * global = NULL;
+Scope * currentScope = NULL;
+
 /* pointer to the AST */
-extern TreeNode * AST;
+TreeNode * AST = NULL;
 
-/*pointer to the error flag*/
-extern int errorEncountered;
+/* error flag */
+int errorEncountered = 0;
 
-/* enum for the instruction type */
-typedef enum
-{
-	RegisterInstruction,
-	RegisterMemoryInstruction
-} InstructionType;
+/* scope stack function prototypes */
+void pushScope(Scope *);
+Scope * popScope();
 
-/* enum for register-only opcodes */
-typedef enum
-{
-	NoneR,
-	Halt, Input, Output,
-	Add, Subtract, Multiply, Divide
-} rOpCode;
-
-/* enum for register / memory opcodes */
-typedef enum
-{
-	NoneRM,
-	Load, LoadAddress, LoadConstant,
-	Store,
-	JumpLessThan, JumpLessEqual, JumpGreaterThan, JumpGreaterEqual, JumpEqual, JumpNotEqual
-} rmOpCode;
-
-/* union for all types of opcodes */
-typedef union
-{
-	rOpCode rCode;
-	rmOpCode rmCode;
-} opCode;
-
-/* structure to build an instruction */
-typedef struct instr
-{
-    /* operation type and code */
-	InstructionType type;
-	opCode oc;
-
-    /* operands */
-	int o1;
-	int o2;
-	int o3;
-
-    /* list pointers */
-	struct instr * prev;
-	struct instr * next;
-
-    /* line number */
-	int num;
-
-    /* label/comment */
-	string * label;
-} Instruction;
-
-/* prototype for Instruction Constructor */
-Instruction * newInstruction(InstructionType, rOpCode, rmOpCode, int, int, int, string *);
-
-/* Instruction List structure */
-typedef struct instrList
-{
-    /* count of the contained instructions */
-	int numInstr;
-
-    /* list pointers */
-	Instruction * first;
-	Instruction * last;
-} InstructionList;
-
-/* structure for chunks of assembly code */
-typedef struct assemblyChunk
-{
-    /* preamble comment */
-	string * preamble;
-
-    /* list of instructions */
-	InstructionList * iList;
-
-    /* postamble comment */
-	string * postamble;
-
-    /* list pointers */
-	struct assemblyChunk * next;
-	struct assemblyChunk * prev;
-} AssemblyChunk;
-
-/* structure for code sections */
-typedef struct assemblyCode
-{
-    /* chunk list pointers */
-	AssemblyChunk * first;
-	AssemblyChunk * last;
-
-    /* counter for chunks */
-	int chunkCount;
-} AssemblyCode;
-
-/* prototype for functions */
-int instructionsInAssembly(AssemblyCode *);
+#endif

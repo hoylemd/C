@@ -1,16 +1,8 @@
 %{
 	#include <stdio.h>
-	#include "common.h"
 	#include "y.tab.h"
 
-	/* parsing data fields */
-	extern char tokenString[50];
-	extern int lineno;
-
-	/* streams */
-	extern FILE * source;
-	extern FILE * out;
-	extern FILE * error;
+    #include "globals.h"
 
     /**
      * wrap routine. Just exit on EOF

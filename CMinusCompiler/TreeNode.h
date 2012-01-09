@@ -12,7 +12,6 @@
 #include "string.h"
 #include "string"
 
-#define MAXTOKENLEN 49
 #define MAXCHILDREN 64
 
 using namespace std;
